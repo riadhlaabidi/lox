@@ -62,6 +62,8 @@ class Scanner {
 
             case '\n' -> line++;
 
+            case '"' -> string();
+
             default -> Lox.error(line, "Unexpected character.");
         }
     }
@@ -74,6 +76,32 @@ class Scanner {
         String text = source.substring(start, current);
         Token t = new Token(type, text, literal, line);
         tokens.add(t);
+    }
+
+    /**
+     * Consumes a string token enclosed in ""
+     */
+    private void string() {
+        while (peek() != '"' && !isAtEnd()) {
+            if (peek() == '\n') {
+                line++;
+            }
+            advance();
+        }
+
+        if (isAtEnd()) {
+            Lox.error(line, "Unterminated string.");
+            return;
+        }
+
+        // valid string, consume the closing " character
+        advance();
+
+        // Trim the enclosing quotes
+        String value = source.substring(start + 1, current - 1);
+        addToken(TokenType.STRING, value);
+
+        // NOTE: unescaping escape sequences would be here if supported.
     }
 
     /**
