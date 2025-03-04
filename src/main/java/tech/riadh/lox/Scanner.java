@@ -64,6 +64,8 @@ class Scanner {
 
             case '"' -> string();
 
+            case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> number();
+
             default -> Lox.error(line, "Unexpected character.");
         }
     }
@@ -104,6 +106,25 @@ class Scanner {
         // NOTE: unescaping escape sequences would be here if supported.
     }
 
+    private void number() {
+        while (isDigit(peek())) {
+            advance();
+        }
+
+        if (peek() == '.' && isDigit(peekAhead())) {
+            advance(); // consume the '.'
+            while (isDigit(peek())) {
+                advance();
+            }
+        }
+
+        addToken(TokenType.NUMBER, Double.parseDouble(source.substring(start, current)));
+    }
+
+    private boolean isDigit(char c) {
+        return c >= '0' && c <= '9';
+    }
+
     /**
      * Consumes the current character, and advances the current pointer.
      * 
@@ -111,6 +132,30 @@ class Scanner {
      */
     private char advance() {
         return source.charAt(current++);
+    }
+
+    /**
+     * Returns the current uncomsumed character.
+     * 
+     * @return the current unconsumed character
+     */
+    private char peek() {
+        if (isAtEnd()) {
+            return '\0';
+        }
+        return source.charAt(current);
+    }
+
+    /**
+     * Returns the next to current uncomsumed character.
+     * 
+     * @return the next to current unconsumed character
+     */
+    private char peekAhead() {
+        if (current + 1 >= source.length()) {
+            return '\0';
+        }
+        return source.charAt(current + 1);
     }
 
     /**
@@ -135,17 +180,5 @@ class Scanner {
 
     private boolean isAtEnd() {
         return current >= source.length();
-    }
-
-    /**
-     * Returns the current uncomsumed character.
-     * 
-     * @return the current unconsumed character
-     */
-    private char peek() {
-        if (isAtEnd()) {
-            return '\0';
-        }
-        return source.charAt(current);
     }
 }
