@@ -39,10 +39,29 @@ class Scanner {
             case ';' -> addToken(TokenType.SEMICOLON);
             case '*' -> addToken(TokenType.STAR);
 
+            // Tokens that might or not be two characters long
             case '!' -> addToken(match('=') ? TokenType.BANG_EQUAL : TokenType.BANG);
             case '>' -> addToken(match('=') ? TokenType.GREATER_EQUAL : TokenType.GREATER);
             case '<' -> addToken(match('=') ? TokenType.LESS_EQUAL : TokenType.LESS);
             case '=' -> addToken(match('=') ? TokenType.EQUAL_EQUAL : TokenType.EQUAL);
+
+            case '/' -> {
+                if (match('/')) {
+                    // we're scanning a single line comment
+                    while (peek() != '\n' && !isAtEnd()) {
+                        advance(); // consume characters until the end of the line
+                    }
+                } else {
+                    addToken(TokenType.SLASH);
+                }
+            }
+
+            case ' ', '\r', '\t' -> {
+                // Ignore whitespaces
+            }
+
+            case '\n' -> line++;
+
             default -> Lox.error(line, "Unexpected character.");
         }
     }
@@ -88,5 +107,17 @@ class Scanner {
 
     private boolean isAtEnd() {
         return current >= source.length();
+    }
+
+    /**
+     * Returns the current uncomsumed character.
+     * 
+     * @return the current unconsumed character
+     */
+    private char peek() {
+        if (isAtEnd()) {
+            return '\0';
+        }
+        return source.charAt(current);
     }
 }
