@@ -7,6 +7,13 @@ import java.util.Map;
 
 class Scanner {
     private static final Map<String, TokenType> KEYWORDS;
+
+    private final String source;
+    private final List<Token> tokens = new ArrayList<>();
+    private int start = 0;
+    private int current = 0;
+    private int line = 1;
+
     static {
         KEYWORDS = new HashMap<>();
         KEYWORDS.put("and", TokenType.AND);
@@ -26,12 +33,6 @@ class Scanner {
         KEYWORDS.put("var", TokenType.VAR);
         KEYWORDS.put("while", TokenType.WHILE);
     }
-
-    private final String source;
-    private final List<Token> tokens = new ArrayList<>();
-    private int start = 0;
-    private int current = 0;
-    private int line = 1;
 
     Scanner(String source) {
         this.source = source;

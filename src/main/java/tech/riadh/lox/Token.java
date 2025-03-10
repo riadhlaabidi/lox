@@ -15,6 +15,6 @@ class Token {
 
     @Override
     public String toString() {
-        return "Token [type=" + type + ", lexeme=" + lexeme + ", literal=" + literal + "]";
+        return "Token [type=" + type + ", lexeme=\033[0;32m" + lexeme + "\033[0m, literal=" + literal + "]";
     }
 }
