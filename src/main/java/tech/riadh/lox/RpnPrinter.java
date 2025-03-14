@@ -6,10 +6,11 @@ import tech.riadh.lox.Expr.Literal;
 import tech.riadh.lox.Expr.Unary;
 
 /**
- * NOTE: Chapter 5: Representing code -> Challenges -> 2
- *
  * A visitor class that converts an expression to
- * Reverse Polish Notation (both operands places before the operator)
+ * Reverse Polish Notation (both operands placed before the operator)
+ * 
+ * @see <a href=
+ *      "https://craftinginterpreters.com/representing-code.html#challenges">Challenges</a>
  */
 class RpnPrinter implements Expr.Visitor<String> {
 
