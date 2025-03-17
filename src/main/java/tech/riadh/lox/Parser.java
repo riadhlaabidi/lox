@@ -5,13 +5,17 @@ import java.util.List;
 /**
  * A Recursive Descent Parser
  *
- * expression -> equality;
+ * expression -> comma;
+ * comma -> equality ( "," equality)*; // added after part 1 of the challenges
  * equality -> comparison ( ( "!=" | "==" ) comparison )*;
  * comparison -> term ( ( ">" | ">=" | "<" | "<=" ) term )*;
  * term -> factor ( ( "-" | "+" ) factor )*;
  * factor -> unary ( ( "/" | "*" ) unary )*;
- * unary -> ( "!" | "-" ) unary | primary;
+ * unary -> (( "!" | "-" ) unary) | primary;
  * primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")";
+ *
+ * @see <a href=
+ *      "https://craftinginterpreters.com/parsing-expressions.html#challenges">Challenges</a>
  *
  */
 class Parser {
@@ -35,7 +39,19 @@ class Parser {
 	}
 
 	private Expr expression() {
-		return equality();
+		return comma();
+	}
+
+	private Expr comma() {
+		Expr expr = equality();
+
+		while (match(TokenType.COMMA)) {
+			Token operator = previous();
+			Expr right = equality();
+			expr = new Expr.Binary(expr, operator, right);
+		}
+
+		return expr;
 	}
 
 	private Expr equality() {
@@ -144,15 +160,15 @@ class Parser {
 		}
 	}
 
-	private Token consume(TokenType type, String msg) {
+	private Token consume(TokenType type, String message) {
 		if (check(type)) {
 			return advance();
 		}
-		throw error(peek(), msg);
+		throw error(peek(), message);
 	}
 
-	private ParseError error(Token t, String msg) {
-		Lox.error(t, msg);
+	private ParseError error(Token token, String message) {
+		Lox.error(token, message);
 		return new ParseError();
 	}
 

@@ -39,7 +39,7 @@ class RpnPrinter implements Expr.Visitor<String> {
 		return expr.right.accept(this) + " " + expr.operator.lexeme;
 	}
 
-	private String print(Expr expr) {
+	String print(Expr expr) {
 		return expr.accept(this);
 	}
 
