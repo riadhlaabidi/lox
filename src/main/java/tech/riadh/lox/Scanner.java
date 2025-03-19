@@ -62,6 +62,8 @@ class Scanner {
             case '+' -> addToken(TokenType.PLUS);
             case ';' -> addToken(TokenType.SEMICOLON);
             case '*' -> addToken(TokenType.STAR);
+            case '?' -> addToken(TokenType.QUESTION);
+            case ':' -> addToken(TokenType.COLON);
 
             // Tokens that might or not be two characters long
             case '!' -> addToken(match('=') ? TokenType.BANG_EQUAL : TokenType.BANG);

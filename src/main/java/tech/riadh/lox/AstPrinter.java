@@ -1,6 +1,7 @@
 package tech.riadh.lox;
 
 import tech.riadh.lox.Expr.Binary;
+import tech.riadh.lox.Expr.Conditional;
 import tech.riadh.lox.Expr.Grouping;
 import tech.riadh.lox.Expr.Literal;
 import tech.riadh.lox.Expr.Unary;
@@ -44,6 +45,17 @@ class AstPrinter implements Expr.Visitor<String> {
 			sb.append(expr.accept(this));
 		}
 		sb.append(")");
+
+		return sb.toString();
+	}
+
+	@Override
+	public String visitConditionalExpr(Conditional expr) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("If");
+		sb.append(parenthesize("condition", expr.condition));
+		sb.append(parenthesize("then", expr.thenBranch));
+		sb.append(parenthesize("else", expr.elseBranch));
 
 		return sb.toString();
 	}

@@ -1,6 +1,7 @@
 package tech.riadh.lox;
 
 import tech.riadh.lox.Expr.Binary;
+import tech.riadh.lox.Expr.Conditional;
 import tech.riadh.lox.Expr.Grouping;
 import tech.riadh.lox.Expr.Literal;
 import tech.riadh.lox.Expr.Unary;
@@ -39,6 +40,13 @@ class RpnPrinter implements Expr.Visitor<String> {
 		return expr.right.accept(this) + " " + expr.operator.lexeme;
 	}
 
+	@Override
+	public String visitConditionalExpr(Conditional expr) {
+		return expr.condition.accept(this) + "if{ "
+				+ expr.thenBranch.accept(this) + " }" + "els{"
+				+ expr.elseBranch.accept(this) + " }";
+	}
+
 	String print(Expr expr) {
 		return expr.accept(this);
 	}
@@ -63,4 +71,5 @@ class RpnPrinter implements Expr.Visitor<String> {
 
 		System.out.println(new RpnPrinter().print(exp));
 	}
+
 }

@@ -5,14 +5,20 @@ import java.util.List;
 /**
  * A Recursive Descent Parser
  *
- * expression -> comma;
- * comma -> equality ( "," equality)*; // added after part 1 of the challenges
+ * expression -> conditional;
+ * conditional -> comma ("?" expression ":" conditional)?;
+ * comma -> equality ( "," equality)*;
  * equality -> comparison ( ( "!=" | "==" ) comparison )*;
  * comparison -> term ( ( ">" | ">=" | "<" | "<=" ) term )*;
  * term -> factor ( ( "-" | "+" ) factor )*;
  * factor -> unary ( ( "/" | "*" ) unary )*;
  * unary -> (( "!" | "-" ) unary) | primary;
- * primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")";
+ * primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")"
+ * // error productions
+ * | ("!=" | "==") equality
+ * | (">"| ">="| "<"| "<=") comparison
+ * | ("+") term
+ * | ("*" | "/") factor;
  *
  * @see <a href=
  *      "https://craftinginterpreters.com/parsing-expressions.html#challenges">Challenges</a>
@@ -39,7 +45,20 @@ class Parser {
 	}
 
 	private Expr expression() {
-		return comma();
+		return conditional();
+	}
+
+	private Expr conditional() {
+		Expr expr = comma();
+
+		if (match(TokenType.QUESTION)) {
+			Expr thenBranch = expression();
+			consume(TokenType.COLON, "Expected ':' after then branch of the conditional expression.");
+			Expr elseBranch = conditional();
+			expr = new Expr.Conditional(expr, thenBranch, elseBranch);
+		}
+
+		return expr;
 	}
 
 	private Expr comma() {
