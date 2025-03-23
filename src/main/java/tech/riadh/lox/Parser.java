@@ -1,5 +1,6 @@
 package tech.riadh.lox;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,7 +12,8 @@ import java.util.List;
  * term -> factor ( ( "-" | "+" ) factor )*;
  * factor -> unary ( ( "/" | "*" ) unary )*;
  * unary -> ( "!" | "-" ) unary | primary;
- * primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")";
+ * primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" |
+ * IDENTIFIER;
  *
  */
 class Parser {
@@ -26,12 +28,82 @@ class Parser {
 		this.tokens = tokens;
 	}
 
-	Expr parse() {
+	/**
+	 * Parses a Lox program.
+	 * program -> declaration* EOF;
+	 */
+	List<Stmt> parse() {
+		List<Stmt> statements = new ArrayList<>();
+
+		while (!isAtEnd()) {
+			statements.add(declaration());
+		}
+
+		return statements;
+	}
+
+	/**
+	 * Parses a declaration statement. The declaration rule falls through to
+	 * parsing a statement if it doesn't match a variable declaration.
+	 * declaration -> varDecl | statement;
+	 */
+	private Stmt declaration() {
 		try {
-			return expression();
+			if (match(TokenType.VAR)) {
+				return varDeclaration();
+			}
+			return statement();
 		} catch (ParseError error) {
+			synchronize();
 			return null;
 		}
+	}
+
+	/**
+	 * Parses and returns a variable declaration statement.
+	 * varDecl -> "var" IDENTIFIER ("=" expression)? ";";
+	 */
+	private Stmt varDeclaration() {
+		Token name = consume(TokenType.IDENTIFIER, "Expected variable name.");
+		Expr initializer = null;
+
+		if (match(TokenType.EQUAL)) {
+			initializer = expression();
+		}
+
+		consume(TokenType.SEMICOLON, "Expected ';' after variable declaration.");
+		return new Stmt.Var(name, initializer);
+	}
+
+	/**
+	 * Parses a statement.
+	 * statement -> exprStmt | printStmt;
+	 */
+	private Stmt statement() {
+		if (match(TokenType.PRINT)) {
+			return printStatement();
+		}
+		return expressionStatement();
+	}
+
+	/**
+	 * Parses and returns a print statement cosuming the following semicolon.
+	 * printStmt -> "print" expression ";";
+	 */
+	private Stmt printStatement() {
+		Expr value = expression();
+		consume(TokenType.SEMICOLON, "Expected ';' after value.");
+		return new Stmt.Print(value);
+	}
+
+	/**
+	 * Parses and returns an expression statement consuming the following semicolon.
+	 * exprStmt -> expression ";";
+	 */
+	private Stmt expressionStatement() {
+		Expr expr = expression();
+		consume(TokenType.SEMICOLON, "Expected ';' after expression");
+		return new Stmt.Expression(expr);
 	}
 
 	private Expr expression() {
@@ -111,6 +183,10 @@ class Parser {
 
 		if (match(TokenType.NUMBER, TokenType.STRING)) {
 			return new Expr.Literal(previous().literal);
+		}
+
+		if (match(TokenType.IDENTIFIER)) {
+			return new Expr.Variable(previous());
 		}
 
 		if (match(TokenType.LEFT_PAREN)) {

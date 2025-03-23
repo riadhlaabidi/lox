@@ -4,6 +4,7 @@ import tech.riadh.lox.Expr.Binary;
 import tech.riadh.lox.Expr.Grouping;
 import tech.riadh.lox.Expr.Literal;
 import tech.riadh.lox.Expr.Unary;
+import tech.riadh.lox.Expr.Variable;
 
 /**
  * A visitor class that converts an expression to
@@ -37,6 +38,12 @@ class RpnPrinter implements Expr.Visitor<String> {
 	@Override
 	public String visitUnaryExpr(Unary expr) {
 		return expr.right.accept(this) + " " + expr.operator.lexeme;
+	}
+
+	@Override
+	public String visitVariableExpr(Variable expr) {
+		// TODO: Auto-generated method stub
+		return null;
 	}
 
 	private String print(Expr expr) {

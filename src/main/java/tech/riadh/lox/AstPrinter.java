@@ -4,6 +4,7 @@ import tech.riadh.lox.Expr.Binary;
 import tech.riadh.lox.Expr.Grouping;
 import tech.riadh.lox.Expr.Literal;
 import tech.riadh.lox.Expr.Unary;
+import tech.riadh.lox.Expr.Variable;
 
 class AstPrinter implements Expr.Visitor<String> {
 
@@ -32,6 +33,12 @@ class AstPrinter implements Expr.Visitor<String> {
 	@Override
 	public String visitUnaryExpr(Unary expr) {
 		return parenthesize(expr.operator.lexeme, expr.right);
+	}
+
+	@Override
+	public String visitVariableExpr(Variable expr) {
+		// TODO: Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'visitVariableExpr'");
 	}
 
 	private String parenthesize(String name, Expr... exprs) {

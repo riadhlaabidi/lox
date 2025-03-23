@@ -1,11 +1,15 @@
 package tech.riadh.lox;
 
+import java.util.List;
+
 import tech.riadh.lox.Expr.Binary;
 import tech.riadh.lox.Expr.Grouping;
 import tech.riadh.lox.Expr.Literal;
 import tech.riadh.lox.Expr.Unary;
+import tech.riadh.lox.Expr.Variable;
+import tech.riadh.lox.Stmt.Var;
 
-class Interpreter implements Expr.Visitor<Object> {
+class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 	@Override
 	public Object visitBinaryExpr(Binary expr) {
@@ -86,17 +90,53 @@ class Interpreter implements Expr.Visitor<Object> {
 		}
 	}
 
-	void interpret(Expr expression) {
+	@Override
+	public Object visitVariableExpr(Variable expr) {
+		// TODO: Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Void visitVarStatement(Var stmt) {
+		// TODO: Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Void visitExpressionStatement(Stmt.Expression stmt) {
+		evaluate(stmt.expression);
+		return null;
+	}
+
+	@Override
+	public Void visitPrintStatement(Stmt.Print stmt) {
+		Object value = evaluate(stmt.expression);
+		System.out.println(stringify(value));
+		return null;
+	}
+
+	void interpret(List<Stmt> statements) {
 		try {
-			Object value = evaluate(expression);
-			System.out.println(stringify(value));
+			for (Stmt stmt : statements) {
+				execute(stmt);
+			}
 		} catch (RuntimeError error) {
 			Lox.runtimeError(error);
 		}
 	}
 
+	/**
+	 * Interprets an expression.
+	 */
 	private Object evaluate(Expr expr) {
 		return expr.accept(this);
+	}
+
+	/**
+	 * Interprets a statement.
+	 */
+	private void execute(Stmt stmt) {
+		stmt.accept(this);
 	}
 
 	private boolean isTruthy(Object o) {
