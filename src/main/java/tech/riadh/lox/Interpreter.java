@@ -99,7 +99,7 @@ class Interpreter implements Expr.Visitor<Object> {
 		return expr.accept(this);
 	}
 
-	private Boolean isTruthy(Object o) {
+	private boolean isTruthy(Object o) {
 		if (o == null) {
 			return false;
 		}
