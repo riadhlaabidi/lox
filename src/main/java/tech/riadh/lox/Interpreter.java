@@ -32,8 +32,8 @@ class Interpreter implements Expr.Visitor<Object> {
 			case EQUAL_EQUAL -> isEqual(left, right);
 			case BANG_EQUAL -> !isEqual(left, right);
 			case PLUS -> {
-				if (left instanceof String && right instanceof String) {
-					yield (String) left + (String) right;
+				if (left instanceof String || right instanceof String) {
+					yield stringify(left) + stringify(right);
 				}
 				if (left instanceof Double && right instanceof Double) {
 					yield (double) left + (double) right;
@@ -130,6 +130,9 @@ class Interpreter implements Expr.Visitor<Object> {
 
 	private void checkNumberOperands(Token operator, Object left, Object right) {
 		if (left instanceof Double && right instanceof Double) {
+			if ((double) right == 0d) {
+				throw new RuntimeError(operator, "Division by zero.");
+			}
 			return;
 		}
 		throw new RuntimeError(operator, "Operands must be numbers.");
