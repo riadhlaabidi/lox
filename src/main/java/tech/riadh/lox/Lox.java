@@ -8,9 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-/**
- * Hello world!
- */
 public class Lox {
     private static final Interpreter INTERPRETER = new Interpreter();
 

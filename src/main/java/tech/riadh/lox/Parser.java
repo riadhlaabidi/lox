@@ -4,17 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A Recursive Descent Parser
- *
- * expression -> equality;
- * equality -> comparison ( ( "!=" | "==" ) comparison )*;
- * comparison -> term ( ( ">" | ">=" | "<" | "<=" ) term )*;
- * term -> factor ( ( "-" | "+" ) factor )*;
- * factor -> unary ( ( "/" | "*" ) unary )*;
- * unary -> ( "!" | "-" ) unary | primary;
- * primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" |
- * IDENTIFIER;
- *
+ * Lox's Recursive Descent Parser
  */
 class Parser {
 
@@ -31,6 +21,8 @@ class Parser {
 	/**
 	 * Parses a Lox program.
 	 * program -> declaration* EOF;
+	 *
+	 * @return A list of {@link Stmt Statements}
 	 */
 	List<Stmt> parse() {
 		List<Stmt> statements = new ArrayList<>();
@@ -46,6 +38,10 @@ class Parser {
 	 * Parses a declaration statement. The declaration rule falls through to
 	 * parsing a statement if it doesn't match a variable declaration.
 	 * declaration -> varDecl | statement;
+	 *
+	 * @return A variable declaration statement, or an actual statement. In case of
+	 *         a parse error, the parser goes into panic mode and synchronizes
+	 *         tokens until the next valid state and returns null.
 	 */
 	private Stmt declaration() {
 		try {
@@ -62,6 +58,8 @@ class Parser {
 	/**
 	 * Parses and returns a variable declaration statement.
 	 * varDecl -> "var" IDENTIFIER ("=" expression)? ";";
+	 *
+	 * @return A variable declaration statement
 	 */
 	private Stmt varDeclaration() {
 		Token name = consume(TokenType.IDENTIFIER, "Expected variable name.");
@@ -76,8 +74,11 @@ class Parser {
 	}
 
 	/**
-	 * Parses a statement.
+	 * Parses and returns a statement.
 	 * statement -> exprStmt | printStmt;
+	 * 
+	 * @return A statement, this could be a print statement or an expression
+	 *         statement.
 	 */
 	private Stmt statement() {
 		if (match(TokenType.PRINT)) {
@@ -89,6 +90,8 @@ class Parser {
 	/**
 	 * Parses and returns a print statement cosuming the following semicolon.
 	 * printStmt -> "print" expression ";";
+	 *
+	 * @return A print statement
 	 */
 	private Stmt printStatement() {
 		Expr value = expression();
@@ -99,6 +102,8 @@ class Parser {
 	/**
 	 * Parses and returns an expression statement consuming the following semicolon.
 	 * exprStmt -> expression ";";
+	 *
+	 * @return An expression statement
 	 */
 	private Stmt expressionStatement() {
 		Expr expr = expression();
@@ -106,10 +111,47 @@ class Parser {
 		return new Stmt.Expression(expr);
 	}
 
+	/**
+	 * Parses and returns an expression.
+	 * expression -> assignment;
+	 *
+	 * @return An expression
+	 */
 	private Expr expression() {
-		return equality();
+		return assignment();
 	}
 
+	/**
+	 * Parses and returns an assignment expression.
+	 * assignment -> IDENTIFIER "=" assignment | equality;
+	 *
+	 * @return An assignment expression
+	 */
+	private Expr assignment() {
+		Expr expr = equality();
+
+		if (match(TokenType.EQUAL)) {
+			Token equal = previous();
+			Expr value = assignment();
+
+			if (expr instanceof Expr.Variable) {
+				Expr.Variable v = (Expr.Variable) expr;
+				return new Expr.Assign(v.name, value);
+			}
+
+			// report an error without throwing, the parser is in a valid state
+			error(equal, "Invalid assignment target.");
+		}
+
+		return expr;
+	}
+
+	/**
+	 * Parses and returns an equality expression.
+	 * equality -> comparison ( ( "!=" | "==" ) comparison )*;
+	 * 
+	 * @return An equality exprression
+	 */
 	private Expr equality() {
 		Expr expr = comparison();
 
@@ -122,6 +164,12 @@ class Parser {
 		return expr;
 	}
 
+	/**
+	 * Parses and returns a comparison expression.
+	 * comparison -> term ( ( ">" | ">=" | "<" | "<=" ) term )*;
+	 * 
+	 * @return A comparison expression
+	 */
 	private Expr comparison() {
 		Expr expr = term();
 
@@ -134,6 +182,12 @@ class Parser {
 		return expr;
 	}
 
+	/**
+	 * Parses and return a term expression.
+	 * term -> factor ( ( "-" | "+" ) factor )*;
+	 * 
+	 * @return A term expression
+	 */
 	private Expr term() {
 		Expr expr = factor();
 
@@ -146,6 +200,12 @@ class Parser {
 		return expr;
 	}
 
+	/**
+	 * Parses and returns a factor expression.
+	 * factor -> unary ( ( "/" | "*" ) unary )*;
+	 * 
+	 * @return A factor expression
+	 */
 	private Expr factor() {
 		Expr expr = unary();
 
@@ -158,6 +218,12 @@ class Parser {
 		return expr;
 	}
 
+	/**
+	 * Parses and returns a unary expression.
+	 * unary -> ( "!" | "-" ) unary | primary;
+	 * 
+	 * @return A unary expression
+	 */
 	private Expr unary() {
 		if (match(TokenType.BANG, TokenType.MINUS)) {
 			Token operator = previous();
@@ -168,6 +234,14 @@ class Parser {
 		return primary();
 	}
 
+	/**
+	 * Parses and returns a primary expression.
+	 * primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" |
+	 * IDENTIFIER;
+	 * 
+	 * @return A primary expression
+	 * @throws ParseError If it does not match a valid primary token
+	 */
 	private Expr primary() {
 		if (match(TokenType.FALSE)) {
 			return new Expr.Literal(false);

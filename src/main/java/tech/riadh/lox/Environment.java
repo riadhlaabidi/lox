@@ -34,4 +34,21 @@ class Environment {
 		throw new RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
 	}
 
+	/**
+	 * Assigns a value to an existing variable. Unlike
+	 * {@link #define(String, Object) Define}, this method is not allowed to create
+	 * a new variable.
+	 * 
+	 * @param name  The variable name token
+	 * @param value The value to be assigned to the variable
+	 * @throws RuntimeError If the variable does not already exist in the values map
+	 */
+	void assign(Token name, Object value) {
+		if (values.containsKey(name.lexeme)) {
+			values.put(name.lexeme, value);
+			return;
+		}
+		throw new RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
+	}
+
 }
