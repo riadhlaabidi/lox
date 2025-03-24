@@ -11,6 +11,8 @@ import tech.riadh.lox.Stmt.Var;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
+	private Environment environment = new Environment();
+
 	@Override
 	public Object visitBinaryExpr(Binary expr) {
 		Object left = evaluate(expr.left);
@@ -92,13 +94,16 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 	@Override
 	public Object visitVariableExpr(Variable expr) {
-		// TODO: Auto-generated method stub
-		return null;
+		return environment.get(expr.name);
 	}
 
 	@Override
 	public Void visitVarStatement(Var stmt) {
-		// TODO: Auto-generated method stub
+		Object value = null;
+		if (stmt.initializer != null) {
+			value = evaluate(stmt.initializer);
+		}
+		environment.define(stmt.name.lexeme, value);
 		return null;
 	}
 

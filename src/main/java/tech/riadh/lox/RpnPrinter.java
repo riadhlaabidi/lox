@@ -42,8 +42,7 @@ class RpnPrinter implements Expr.Visitor<String> {
 
 	@Override
 	public String visitVariableExpr(Variable expr) {
-		// TODO: Auto-generated method stub
-		return null;
+		return expr.name.lexeme;
 	}
 
 	private String print(Expr expr) {
@@ -58,7 +57,7 @@ class RpnPrinter implements Expr.Visitor<String> {
 						new Expr.Binary(
 								new Expr.Literal(1),
 								new Token(TokenType.PLUS, "+", null, 1),
-								new Expr.Literal(2))),
+								new Expr.Variable(new Token(TokenType.IDENTIFIER, "a", null, 1)))),
 				// *
 				new Token(TokenType.STAR, "*", null, 1),
 				// (4 - 3)
