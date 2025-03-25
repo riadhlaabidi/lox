@@ -8,6 +8,7 @@ import tech.riadh.lox.Expr.Grouping;
 import tech.riadh.lox.Expr.Literal;
 import tech.riadh.lox.Expr.Unary;
 import tech.riadh.lox.Expr.Variable;
+import tech.riadh.lox.Stmt.Block;
 import tech.riadh.lox.Stmt.Var;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
@@ -128,6 +129,35 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 		return null;
 	}
 
+	@Override
+	public Void visitBlockStatement(Block stmt) {
+		executeBlock(stmt, new Environment(environment));
+		return null;
+	}
+
+	/**
+	 * Executes a block statement in the context of a given environment.
+	 * This method changes the {@link #environment environment} field to the
+	 * given blockEnvironment which corresponds to the innermost scope
+	 * containing the code to be executed, and then restores the previous
+	 * environment back regardless of whether it ecountered an exception or not
+	 * while being executed.
+	 * 
+	 * @param block            The block statement to execute
+	 * @param blockEnvironment The block environment
+	 */
+	private void executeBlock(Block block, Environment blockEnvironment) {
+		Environment previous = this.environment;
+		try {
+			this.environment = blockEnvironment;
+			for (Stmt s : block.statements) {
+				execute(s);
+			}
+		} finally {
+			this.environment = previous;
+		}
+	}
+
 	void interpret(List<Stmt> statements) {
 		try {
 			for (Stmt stmt : statements) {
@@ -203,4 +233,5 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 		return o.toString();
 	}
+
 }

@@ -75,7 +75,7 @@ class Parser {
 
 	/**
 	 * Parses and returns a statement.
-	 * statement -> exprStmt | printStmt;
+	 * statement -> exprStmt | printStmt | blockStmt;
 	 * 
 	 * @return A statement, this could be a print statement or an expression
 	 *         statement.
@@ -84,7 +84,22 @@ class Parser {
 		if (match(TokenType.PRINT)) {
 			return printStatement();
 		}
+		if (match(TokenType.LEFT_BRACE)) {
+			return block();
+		}
 		return expressionStatement();
+	}
+
+	/**
+	 * Parses and returns an expression statement consuming the following semicolon.
+	 * exprStmt -> expression ";";
+	 *
+	 * @return An expression statement
+	 */
+	private Stmt expressionStatement() {
+		Expr expr = expression();
+		consume(TokenType.SEMICOLON, "Expected ';' after expression");
+		return new Stmt.Expression(expr);
 	}
 
 	/**
@@ -100,15 +115,20 @@ class Parser {
 	}
 
 	/**
-	 * Parses and returns an expression statement consuming the following semicolon.
-	 * exprStmt -> expression ";";
+	 * Parses and returns a block statement.
+	 * blockStmt -> "{" declarations* "}";
 	 *
-	 * @return An expression statement
+	 * @return A block statement
 	 */
-	private Stmt expressionStatement() {
-		Expr expr = expression();
-		consume(TokenType.SEMICOLON, "Expected ';' after expression");
-		return new Stmt.Expression(expr);
+	private Stmt block() {
+		List<Stmt> statements = new ArrayList<>();
+
+		while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+			statements.add(declaration());
+		}
+
+		consume(TokenType.RIGHT_BRACE, "Expected '}' after block.");
+		return new Stmt.Block(statements);
 	}
 
 	/**
