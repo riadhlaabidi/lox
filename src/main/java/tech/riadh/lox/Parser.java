@@ -8,6 +8,9 @@ import java.util.List;
  */
 class Parser {
 
+	private boolean allowExpression;
+	private boolean foundExpression = false;
+
 	private static class ParseError extends RuntimeException {
 	}
 
@@ -29,6 +32,34 @@ class Parser {
 
 		while (!isAtEnd()) {
 			statements.add(declaration());
+		}
+
+		return statements;
+	}
+
+	/**
+	 * Parses code from command line input.
+	 * This method is used to parse statements for the REPL interpreter, it allows
+	 * the parsing of an expression by returning a one element list of
+	 * statements, so the first element can be cast to a {@link Stmt.Expression
+	 * Statement expression} that has the actual {@link Expr expression} to be
+	 * interpreted.
+	 * 
+	 * @return A list of statements
+	 */
+	List<Stmt> parseRepl() {
+		allowExpression = true;
+		List<Stmt> statements = new ArrayList<>();
+
+		while (!isAtEnd()) {
+			statements.add(declaration());
+
+			if (foundExpression) {
+				Lox.interpretAsExpression = true;
+				return List.of(statements.getLast());
+			}
+
+			allowExpression = false;
 		}
 
 		return statements;
@@ -98,7 +129,12 @@ class Parser {
 	 */
 	private Stmt expressionStatement() {
 		Expr expr = expression();
-		consume(TokenType.SEMICOLON, "Expected ';' after expression");
+
+		if (allowExpression && isAtEnd()) {
+			foundExpression = true;
+		} else {
+			consume(TokenType.SEMICOLON, "Expected ';' after expression");
+		}
 		return new Stmt.Expression(expr);
 	}
 

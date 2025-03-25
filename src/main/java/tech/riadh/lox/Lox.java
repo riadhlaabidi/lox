@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class Lox {
+    static boolean interpretAsExpression = false;
     private static final Interpreter INTERPRETER = new Interpreter();
 
     static boolean hadError = false;
@@ -43,13 +44,37 @@ public class Lox {
         BufferedReader reader = new BufferedReader(input);
 
         for (;;) {
+            hadError = false;
             System.out.print("> ");
             String line = reader.readLine();
+
             if (line == null) {
                 break;
             }
-            run(line);
-            hadError = false;
+
+            if (line.isBlank()) {
+                continue;
+            }
+
+            Scanner scanner = new Scanner(line);
+            List<Token> tokens = scanner.scanTokens();
+            Parser parser = new Parser(tokens);
+            List<Stmt> syntax = parser.parseRepl();
+
+            if (hadError) {
+                continue;
+            }
+
+            if (interpretAsExpression) {
+                Expr expr = ((Stmt.Expression) syntax.get(0)).expression;
+                Object result = INTERPRETER.interpret(expr);
+                if (result != null) {
+                    System.out.println("= " + result);
+                }
+                interpretAsExpression = false;
+            } else {
+                INTERPRETER.interpret(syntax);
+            }
         }
     }
 

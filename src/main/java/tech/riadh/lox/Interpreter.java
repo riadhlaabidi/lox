@@ -14,6 +14,7 @@ import tech.riadh.lox.Stmt.Var;
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 	private Environment environment = new Environment();
+	private static Object unitialized = new Object();
 
 	@Override
 	public Object visitBinaryExpr(Binary expr) {
@@ -96,7 +97,13 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 	@Override
 	public Object visitVariableExpr(Variable expr) {
-		return environment.get(expr.name);
+		Object value = environment.get(expr.name);
+
+		if (value == unitialized) {
+			throw new RuntimeError(expr.name, "Variable '" + expr.name.lexeme + "' has not been initialized.");
+		}
+
+		return value;
 	}
 
 	@Override
@@ -108,7 +115,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 	@Override
 	public Void visitVarStatement(Var stmt) {
-		Object value = null;
+		Object value = unitialized;
 		if (stmt.initializer != null) {
 			value = evaluate(stmt.initializer);
 		}
@@ -165,6 +172,23 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 			}
 		} catch (RuntimeError error) {
 			Lox.runtimeError(error);
+		}
+	}
+
+	/**
+	 * Interprets an expression and return its value.
+	 *
+	 * @param expression The expression to be interpreted
+	 * @return The string representation of the interpreted value of the expression,
+	 *         or null in case of an interpretation error.
+	 */
+	String interpret(Expr expression) {
+		try {
+			Object value = evaluate(expression);
+			return stringify(value);
+		} catch (RuntimeError error) {
+			Lox.runtimeError(error);
+			return null;
 		}
 	}
 
