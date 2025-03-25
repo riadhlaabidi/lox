@@ -7,7 +7,24 @@ import java.util.Map;
  * Environment stores bindings of variables to values.
  */
 class Environment {
+	final Environment enclosing;
 	private final Map<String, Object> values = new HashMap<>();
+
+	/**
+	 * Constructs an environment without an enclosing one, this is used for the
+	 * global scope environment which ends the chain.
+	 */
+	Environment() {
+		enclosing = null;
+	}
+
+	/**
+	 * Constructs an environment given the enclosing one, which creates a chain of
+	 * scopes going from the outermost (global) to the innermost.
+	 */
+	Environment(Environment enclosing) {
+		this.enclosing = enclosing;
+	}
 
 	/**
 	 * Defines a variable.
@@ -31,6 +48,13 @@ class Environment {
 		if (values.containsKey(name.lexeme)) {
 			return values.get(name.lexeme);
 		}
+
+		// If the variable is not found, we'll recursively go up and try enclosing
+		// environments
+		if (enclosing != null) {
+			return enclosing.get(name);
+		}
+
 		throw new RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
 	}
 
@@ -48,6 +72,14 @@ class Environment {
 			values.put(name.lexeme, value);
 			return;
 		}
+
+		// If the variable is not found, we'll recursively go up and try enclosing
+		// environments
+		if (enclosing != null) {
+			enclosing.assign(name, value);
+			return;
+		}
+
 		throw new RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
 	}
 
