@@ -167,12 +167,12 @@ class Parser {
 
 	/**
 	 * Parses and returns an assignment expression.
-	 * assignment -> IDENTIFIER "=" assignment | equality;
+	 * assignment -> IDENTIFIER "=" assignment | logic_or;
 	 *
 	 * @return An assignment expression
 	 */
 	private Expr assignment() {
-		Expr expr = equality();
+		Expr expr = or();
 
 		if (match(TokenType.EQUAL)) {
 			Token equal = previous();
@@ -191,10 +191,46 @@ class Parser {
 	}
 
 	/**
+	 * Parses and return a logical or expression
+	 * logic_or -> logic_and ("or" logic_and)*;
+	 *
+	 * @return A logical or expression
+	 */
+	private Expr or() {
+		Expr expr = and();
+
+		while (match(TokenType.OR)) {
+			Token operator = previous();
+			Expr right = and();
+			expr = new Expr.Logical(expr, operator, right);
+		}
+
+		return expr;
+	}
+
+	/**
+	 * Parses and return a logical and expression.
+	 * logic_and -> equality ("and" equality)*;
+	 * 
+	 * @return A logical and expression
+	 */
+	private Expr and() {
+		Expr expr = equality();
+
+		while (match(TokenType.AND)) {
+			Token operator = previous();
+			Expr right = equality();
+			expr = new Expr.Logical(expr, operator, right);
+		}
+
+		return expr;
+	}
+
+	/**
 	 * Parses and returns an equality expression.
 	 * equality -> comparison ( ( "!=" | "==" ) comparison )*;
 	 * 
-	 * @return An equality exprression
+	 * @return An equality expression
 	 */
 	private Expr equality() {
 		Expr expr = comparison();
