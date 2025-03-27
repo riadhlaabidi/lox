@@ -9,6 +9,7 @@ import tech.riadh.lox.Expr.Literal;
 import tech.riadh.lox.Expr.Unary;
 import tech.riadh.lox.Expr.Variable;
 import tech.riadh.lox.Stmt.Block;
+import tech.riadh.lox.Stmt.If;
 import tech.riadh.lox.Stmt.Var;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
@@ -119,6 +120,16 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 	@Override
 	public Void visitExpressionStatement(Stmt.Expression stmt) {
 		evaluate(stmt.expression);
+		return null;
+	}
+
+	@Override
+	public Void visitIfStatement(If stmt) {
+		if (isTruthy(evaluate(stmt.condition))) {
+			execute(stmt.thenBranch);
+		} else if (stmt.elseBranch != null) {
+			execute(stmt.elseBranch);
+		}
 		return null;
 	}
 

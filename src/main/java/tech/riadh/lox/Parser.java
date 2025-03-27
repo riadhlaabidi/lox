@@ -75,12 +75,15 @@ class Parser {
 
 	/**
 	 * Parses and returns a statement.
-	 * statement -> exprStmt | printStmt | blockStmt;
+	 * statement -> exprStmt | ifStmt | printStmt | blockStmt;
 	 * 
 	 * @return A statement, this could be a print statement or an expression
 	 *         statement.
 	 */
 	private Stmt statement() {
+		if (match(TokenType.IF)) {
+			return ifStatement();
+		}
 		if (match(TokenType.PRINT)) {
 			return printStatement();
 		}
@@ -100,6 +103,27 @@ class Parser {
 		Expr expr = expression();
 		consume(TokenType.SEMICOLON, "Expected ';' after expression");
 		return new Stmt.Expression(expr);
+	}
+
+	/**
+	 * Parses and returns an if statement. This method eagerly looks for an else
+	 * before returning, so the innermost call to a nested series will claim the
+	 * else clause for itself before returning to the outer if statements.
+	 *
+	 * @return An If statement
+	 */
+	private Stmt ifStatement() {
+		consume(TokenType.LEFT_PAREN, "Expected '(' after 'if'.");
+		Expr condition = expression();
+		consume(TokenType.RIGHT_PAREN, "Expected ')' after if statement's condition.");
+
+		Stmt thenBranch = statement();
+		Stmt elseBranch = null;
+		if (match(TokenType.ELSE)) {
+			elseBranch = statement();
+		}
+
+		return new Stmt.If(condition, thenBranch, elseBranch);
 	}
 
 	/**
