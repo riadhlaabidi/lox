@@ -1,6 +1,7 @@
 package tech.riadh.lox;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -79,7 +80,7 @@ class Parser {
 	/**
 	 * Parses and returns a statement.
 	 *
-	 * statement -> exprStmt | ifStmt | whileStmt | printStmt | blockStmt;
+	 * statement -> exprStmt | ifStmt | whileStmt | forStmt | printStmt | blockStmt;
 	 * 
 	 * @return A statement, this could be a print statement or an expression
 	 *         statement.
@@ -90,6 +91,9 @@ class Parser {
 		}
 		if (match(TokenType.WHILE)) {
 			return whileStatement();
+		}
+		if (match(TokenType.FOR)) {
+			return forStatement();
 		}
 		if (match(TokenType.PRINT)) {
 			return printStatement();
@@ -149,6 +153,84 @@ class Parser {
 		consume(TokenType.RIGHT_PAREN, "Expected ')' after while condition.");
 		Stmt body = statement();
 		return new Stmt.While(condition, body);
+	}
+
+	/**
+	 * Parses and returns a for statement. This method desugares the syntactic sugar
+	 * of the for loop into a primitive form that the interpreter already knows how
+	 * to execute, using statements and while loop.
+	 *
+	 * For instance:
+	 * 
+	 * <pre>
+	 * <code>
+	 *for (var i = 0; i < 5; i = i + 1) {
+	 *    print i;
+	 *}
+	 * </code>
+	 * </pre>
+	 * 
+	 * could be rewritten as:
+	 * 
+	 * <pre>
+	 * <code>
+	 *{
+	 *    var i = 0;
+	 *    while (i < 5) {
+	 *        print i;
+	 *        i = i + 1;
+	 *    }
+	 *}
+	 * </code>
+	 * </pre>
+	 *
+	 * forStmt -> "for" "(" (varDecl | exprStmt | ";" ) expression? ";"
+	 * expression? ")" statement;
+	 * 
+	 * @return A for statement
+	 */
+	private Stmt forStatement() {
+		consume(TokenType.LEFT_PAREN, " Expected '(' after 'for'.");
+
+		Stmt initializer;
+		if (match(TokenType.SEMICOLON)) {
+			initializer = null;
+		} else if (match(TokenType.VAR)) {
+			initializer = varDeclaration();
+		} else {
+			initializer = expressionStatement();
+		}
+		// The semicolon after initializer is consumed in each case
+
+		Expr condition = null;
+		if (!check(TokenType.SEMICOLON)) {
+			condition = expression();
+		}
+		consume(TokenType.SEMICOLON, "Expected ';' after loop condition.");
+
+		Expr increment = null;
+		if (!check(TokenType.RIGHT_PAREN)) {
+			increment = expression();
+		}
+		consume(TokenType.RIGHT_PAREN, "Expected ')' after for clauses.");
+
+		Stmt body = statement();
+
+		// Desugaring for loop into already defined nodes
+		if (increment != null) {
+			body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(increment)));
+		}
+
+		if (condition == null) {
+			condition = new Expr.Literal(true);
+		}
+		body = new Stmt.While(condition, body);
+
+		if (initializer != null) {
+			body = new Stmt.Block(Arrays.asList(initializer, body));
+		}
+
+		return body;
 	}
 
 	/**
