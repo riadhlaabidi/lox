@@ -20,6 +20,7 @@ class Parser {
 
 	/**
 	 * Parses a Lox program.
+	 *
 	 * program -> declaration* EOF;
 	 *
 	 * @return A list of {@link Stmt Statements}
@@ -37,6 +38,7 @@ class Parser {
 	/**
 	 * Parses a declaration statement. The declaration rule falls through to
 	 * parsing a statement if it doesn't match a variable declaration.
+	 *
 	 * declaration -> varDecl | statement;
 	 *
 	 * @return A variable declaration statement, or an actual statement. In case of
@@ -57,6 +59,7 @@ class Parser {
 
 	/**
 	 * Parses and returns a variable declaration statement.
+	 *
 	 * varDecl -> "var" IDENTIFIER ("=" expression)? ";";
 	 *
 	 * @return A variable declaration statement
@@ -75,7 +78,8 @@ class Parser {
 
 	/**
 	 * Parses and returns a statement.
-	 * statement -> exprStmt | ifStmt | printStmt | blockStmt;
+	 *
+	 * statement -> exprStmt | ifStmt | whileStmt | printStmt | blockStmt;
 	 * 
 	 * @return A statement, this could be a print statement or an expression
 	 *         statement.
@@ -83,6 +87,9 @@ class Parser {
 	private Stmt statement() {
 		if (match(TokenType.IF)) {
 			return ifStatement();
+		}
+		if (match(TokenType.WHILE)) {
+			return whileStatement();
 		}
 		if (match(TokenType.PRINT)) {
 			return printStatement();
@@ -95,6 +102,7 @@ class Parser {
 
 	/**
 	 * Parses and returns an expression statement consuming the following semicolon.
+	 *
 	 * exprStmt -> expression ";";
 	 *
 	 * @return An expression statement
@@ -109,6 +117,8 @@ class Parser {
 	 * Parses and returns an if statement. This method eagerly looks for an else
 	 * before returning, so the innermost call to a nested series will claim the
 	 * else clause for itself before returning to the outer if statements.
+	 *
+	 * ifStmt -> "if" "(" expression ")" statement ("else" statement)?:
 	 *
 	 * @return An If statement
 	 */
@@ -127,7 +137,23 @@ class Parser {
 	}
 
 	/**
+	 * Parses and returns a while statement
+	 *
+	 * whileStmt -> "while" "(" expression ")" statement;
+	 * 
+	 * @return A while statement
+	 */
+	private Stmt whileStatement() {
+		consume(TokenType.LEFT_PAREN, "Expected '(' after while.");
+		Expr condition = expression();
+		consume(TokenType.RIGHT_PAREN, "Expected ')' after while condition.");
+		Stmt body = statement();
+		return new Stmt.While(condition, body);
+	}
+
+	/**
 	 * Parses and returns a print statement cosuming the following semicolon.
+	 * 
 	 * printStmt -> "print" expression ";";
 	 *
 	 * @return A print statement
@@ -140,6 +166,7 @@ class Parser {
 
 	/**
 	 * Parses and returns a block statement.
+	 *
 	 * blockStmt -> "{" declarations* "}";
 	 *
 	 * @return A block statement
@@ -157,6 +184,7 @@ class Parser {
 
 	/**
 	 * Parses and returns an expression.
+	 *
 	 * expression -> assignment;
 	 *
 	 * @return An expression
@@ -167,6 +195,7 @@ class Parser {
 
 	/**
 	 * Parses and returns an assignment expression.
+	 *
 	 * assignment -> IDENTIFIER "=" assignment | logic_or;
 	 *
 	 * @return An assignment expression
@@ -191,7 +220,8 @@ class Parser {
 	}
 
 	/**
-	 * Parses and return a logical or expression
+	 * Parses and returns a logical or expression
+	 *
 	 * logic_or -> logic_and ("or" logic_and)*;
 	 *
 	 * @return A logical or expression
@@ -209,7 +239,8 @@ class Parser {
 	}
 
 	/**
-	 * Parses and return a logical and expression.
+	 * Parses and returns a logical and expression.
+	 *
 	 * logic_and -> equality ("and" equality)*;
 	 * 
 	 * @return A logical and expression
@@ -228,6 +259,7 @@ class Parser {
 
 	/**
 	 * Parses and returns an equality expression.
+	 *
 	 * equality -> comparison ( ( "!=" | "==" ) comparison )*;
 	 * 
 	 * @return An equality expression
@@ -246,6 +278,7 @@ class Parser {
 
 	/**
 	 * Parses and returns a comparison expression.
+	 *
 	 * comparison -> term ( ( ">" | ">=" | "<" | "<=" ) term )*;
 	 * 
 	 * @return A comparison expression
@@ -263,7 +296,8 @@ class Parser {
 	}
 
 	/**
-	 * Parses and return a term expression.
+	 * Parses and returns a term expression.
+	 *
 	 * term -> factor ( ( "-" | "+" ) factor )*;
 	 * 
 	 * @return A term expression
@@ -282,6 +316,7 @@ class Parser {
 
 	/**
 	 * Parses and returns a factor expression.
+	 *
 	 * factor -> unary ( ( "/" | "*" ) unary )*;
 	 * 
 	 * @return A factor expression
@@ -300,6 +335,7 @@ class Parser {
 
 	/**
 	 * Parses and returns a unary expression.
+	 *
 	 * unary -> ( "!" | "-" ) unary | primary;
 	 * 
 	 * @return A unary expression
@@ -316,6 +352,7 @@ class Parser {
 
 	/**
 	 * Parses and returns a primary expression.
+	 *
 	 * primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" |
 	 * IDENTIFIER;
 	 * 

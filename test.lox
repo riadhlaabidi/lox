@@ -1,23 +1,14 @@
-var a = "global a";
-var b = "global b";
-var c = "global c";
+var a = 1;
+var log = 0;
 
-{
-    var a = "outer a";
-    var b = "outer b";
-
-    {
-        var a = "inner a";
-        print a; // inner
-        print b; // outer
-        print c; // global
-    }
-
-    print a; // outer
-    print b; // outer
-    print c; // global
+while (a / 1000000 <= 1) {
+    print a;
+    a = a * 10;
+    log = log + 1;
 }
 
-print a; // global
-print b; // global
-print c; // global
+if (log > 0) {
+    print log;
+}
+
+

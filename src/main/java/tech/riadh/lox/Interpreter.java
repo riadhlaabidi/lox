@@ -12,6 +12,7 @@ import tech.riadh.lox.Expr.Variable;
 import tech.riadh.lox.Stmt.Block;
 import tech.riadh.lox.Stmt.If;
 import tech.riadh.lox.Stmt.Var;
+import tech.riadh.lox.Stmt.While;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
@@ -151,6 +152,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 	}
 
 	@Override
+	public Void visitWhileStatement(While stmt) {
+		while (isTruthy(evaluate(stmt.condition))) {
+			execute(stmt.body);
+		}
+		return null;
+	}
+
+	@Override
 	public Void visitPrintStatement(Stmt.Print stmt) {
 		Object value = evaluate(stmt.expression);
 		System.out.println(stringify(value));
@@ -261,5 +270,4 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 		return o.toString();
 	}
-
 }
