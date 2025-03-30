@@ -9,6 +9,8 @@ import java.util.List;
  */
 class Parser {
 
+	private int loopDepth = 0;
+
 	private static class ParseError extends RuntimeException {
 	}
 
@@ -80,7 +82,9 @@ class Parser {
 	/**
 	 * Parses and returns a statement.
 	 *
-	 * statement -> exprStmt | ifStmt | whileStmt | forStmt | printStmt | blockStmt;
+	 * statement -> exprStmt | ifStmt | whileStmt | forStmt | breakStmt | printStmt
+	 * | blockStmt;
+	 * 
 	 * 
 	 * @return A statement, this could be a print statement or an expression
 	 *         statement.
@@ -94,6 +98,9 @@ class Parser {
 		}
 		if (match(TokenType.FOR)) {
 			return forStatement();
+		}
+		if (match(TokenType.BREAK)) {
+			return breakStatement();
 		}
 		if (match(TokenType.PRINT)) {
 			return printStatement();
@@ -151,8 +158,13 @@ class Parser {
 		consume(TokenType.LEFT_PAREN, "Expected '(' after while.");
 		Expr condition = expression();
 		consume(TokenType.RIGHT_PAREN, "Expected ')' after while condition.");
-		Stmt body = statement();
-		return new Stmt.While(condition, body);
+		try {
+			loopDepth++;
+			Stmt body = statement();
+			return new Stmt.While(condition, body);
+		} finally {
+			loopDepth--;
+		}
 	}
 
 	/**
@@ -214,23 +226,44 @@ class Parser {
 		}
 		consume(TokenType.RIGHT_PAREN, "Expected ')' after for clauses.");
 
-		Stmt body = statement();
+		try {
+			loopDepth++;
+			Stmt body = statement();
 
-		// Desugaring for loop into already defined nodes
-		if (increment != null) {
-			body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(increment)));
+			// Desugaring for loop into already defined nodes
+			if (increment != null) {
+				body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(increment)));
+			}
+
+			if (condition == null) {
+				condition = new Expr.Literal(true);
+			}
+			body = new Stmt.While(condition, body);
+
+			if (initializer != null) {
+				body = new Stmt.Block(Arrays.asList(initializer, body));
+			}
+
+			return body;
+		} finally {
+			loopDepth--;
 		}
+	}
 
-		if (condition == null) {
-			condition = new Expr.Literal(true);
+	/**
+	 * Parses and returns a break statement inside a loop.
+	 *
+	 * breakStmt -> "break" ";";
+	 * 
+	 * @return A break Statement
+	 * @throws ParseError If the break statement is used outside of a loop
+	 */
+	private Stmt breakStatement() {
+		if (loopDepth <= 0) {
+			error(previous(), "Cannot use break outside of a loop.");
 		}
-		body = new Stmt.While(condition, body);
-
-		if (initializer != null) {
-			body = new Stmt.Block(Arrays.asList(initializer, body));
-		}
-
-		return body;
+		consume(TokenType.SEMICOLON, "Expected ';' after 'break'.");
+		return new Stmt.Break();
 	}
 
 	/**

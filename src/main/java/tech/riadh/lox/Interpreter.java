@@ -10,6 +10,7 @@ import tech.riadh.lox.Expr.Logical;
 import tech.riadh.lox.Expr.Unary;
 import tech.riadh.lox.Expr.Variable;
 import tech.riadh.lox.Stmt.Block;
+import tech.riadh.lox.Stmt.Break;
 import tech.riadh.lox.Stmt.If;
 import tech.riadh.lox.Stmt.Var;
 import tech.riadh.lox.Stmt.While;
@@ -17,6 +18,9 @@ import tech.riadh.lox.Stmt.While;
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 	private Environment environment = new Environment();
+
+	private static class BreakException extends RuntimeException {
+	}
 
 	@Override
 	public Object visitBinaryExpr(Binary expr) {
@@ -153,8 +157,12 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 	@Override
 	public Void visitWhileStatement(While stmt) {
-		while (isTruthy(evaluate(stmt.condition))) {
-			execute(stmt.body);
+		try {
+			while (isTruthy(evaluate(stmt.condition))) {
+				execute(stmt.body);
+			}
+		} catch (BreakException e) {
+			// do nothing
 		}
 		return null;
 	}
@@ -170,6 +178,11 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 	public Void visitBlockStatement(Block stmt) {
 		executeBlock(stmt, new Environment(environment));
 		return null;
+	}
+
+	@Override
+	public Void visitBreakStatement(Break stmt) {
+		throw new BreakException();
 	}
 
 	/**
@@ -270,4 +283,5 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 		return o.toString();
 	}
+
 }

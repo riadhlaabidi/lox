@@ -17,6 +17,7 @@ class Scanner {
     static {
         KEYWORDS = new HashMap<>();
         KEYWORDS.put("and", TokenType.AND);
+        KEYWORDS.put("break", TokenType.BREAK);
         KEYWORDS.put("class", TokenType.CLASS);
         KEYWORDS.put("else", TokenType.ELSE);
         KEYWORDS.put("false", TokenType.FALSE);
