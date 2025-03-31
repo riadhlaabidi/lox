@@ -1,5 +1,7 @@
 package tech.riadh.lox;
 
+import java.util.List;
+
 abstract class Expr {
 
 	interface Visitor<R> {
@@ -16,6 +18,8 @@ abstract class Expr {
 		R visitVariableExpr(Variable expr);
 
 		R visitAssignExpr(Assign expr);
+
+		R visitCallExpr(Call expr);
 	}
 
 	abstract <R> R accept(Visitor<R> visitor);
@@ -121,6 +125,23 @@ abstract class Expr {
 		@Override
 		<R> R accept(Visitor<R> visitor) {
 			return visitor.visitAssignExpr(this);
+		}
+	}
+
+	static class Call extends Expr {
+		final Expr callee;
+		final Token paren;
+		final List<Expr> arguments;
+
+		Call(Expr callee, Token paren, List<Expr> arguments) {
+			this.callee = callee;
+			this.paren = paren;
+			this.arguments = arguments;
+		}
+
+		@Override
+		<R> R accept(Visitor<R> visitor) {
+			return visitor.visitCallExpr(this);
 		}
 	}
 }

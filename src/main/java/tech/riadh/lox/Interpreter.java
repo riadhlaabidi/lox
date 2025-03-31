@@ -1,22 +1,44 @@
 package tech.riadh.lox;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import tech.riadh.lox.Expr.Assign;
 import tech.riadh.lox.Expr.Binary;
+import tech.riadh.lox.Expr.Call;
 import tech.riadh.lox.Expr.Grouping;
 import tech.riadh.lox.Expr.Literal;
 import tech.riadh.lox.Expr.Logical;
 import tech.riadh.lox.Expr.Unary;
 import tech.riadh.lox.Expr.Variable;
 import tech.riadh.lox.Stmt.Block;
+import tech.riadh.lox.Stmt.Function;
 import tech.riadh.lox.Stmt.If;
 import tech.riadh.lox.Stmt.Var;
 import tech.riadh.lox.Stmt.While;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+	final Environment globals = new Environment();
+	private Environment environment = globals;
 
-	private Environment environment = new Environment();
+	Interpreter() {
+		globals.define("clock", new LoxCallable() {
+			@Override
+			public int arity() {
+				return 0;
+			}
+
+			@Override
+			public Object call(Interpreter interpreter, List<Object> arguments) {
+				return (double) System.currentTimeMillis() / 1000.0;
+			}
+
+			@Override
+			public String toString() {
+				return "<native function>";
+			}
+		});
+	}
 
 	@Override
 	public Object visitBinaryExpr(Binary expr) {
@@ -126,6 +148,27 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 	}
 
 	@Override
+	public Object visitCallExpr(Call expr) {
+		Object callee = evaluate(expr.callee);
+
+		List<Object> args = new ArrayList<>();
+		for (Expr arg : expr.arguments) {
+			args.add(evaluate(arg));
+		}
+
+		if (!(callee instanceof LoxCallable)) {
+			throw new RuntimeError(expr.paren, "Can only call functions or classes.");
+		}
+
+		LoxCallable function = (LoxCallable) callee;
+		if (args.size() != function.arity()) {
+			throw new RuntimeError(expr.paren,
+					"Exptected " + function.arity() + " arguments but got " + args.size() + ".");
+		}
+		return function.call(this, args);
+	}
+
+	@Override
 	public Void visitVarStatement(Var stmt) {
 		Object value = null;
 		if (stmt.initializer != null) {
@@ -168,7 +211,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 	@Override
 	public Void visitBlockStatement(Block stmt) {
-		executeBlock(stmt, new Environment(environment));
+		executeBlock(stmt.statements, new Environment(environment));
+		return null;
+	}
+
+	@Override
+	public Void visitFunctionStatement(Function stmt) {
+		LoxFunction function = new LoxFunction(stmt);
+		environment.define(stmt.name.lexeme, function);
 		return null;
 	}
 
@@ -180,14 +230,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 	 * environment back regardless of whether it ecountered an exception or not
 	 * while being executed.
 	 * 
-	 * @param block            The block statement to execute
+	 * @param statements       A list of statements to execute
 	 * @param blockEnvironment The block environment
 	 */
-	private void executeBlock(Block block, Environment blockEnvironment) {
+	void executeBlock(List<Stmt> statements, Environment blockEnvironment) {
 		Environment previous = this.environment;
 		try {
 			this.environment = blockEnvironment;
-			for (Stmt s : block.statements) {
+			for (Stmt s : statements) {
 				execute(s);
 			}
 		} finally {
@@ -270,4 +320,5 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 		return o.toString();
 	}
+
 }

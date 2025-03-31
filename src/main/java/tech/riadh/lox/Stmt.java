@@ -16,6 +16,8 @@ abstract class Stmt {
 		R visitIfStatement(If stmt);
 
 		R visitWhileStatement(While stmt);
+
+		R visitFunctionStatement(Function stmt);
 	}
 
 	abstract <R> R accept(Visitor<R> visitor);
@@ -104,6 +106,23 @@ abstract class Stmt {
 		@Override
 		<R> R accept(Visitor<R> visitor) {
 			return visitor.visitWhileStatement(this);
+		}
+	}
+
+	static class Function extends Stmt {
+		final Token name;
+		final List<Token> params;
+		final List<Stmt> body;
+
+		Function(Token name, List<Token> params, List<Stmt> body) {
+			this.name = name;
+			this.params = params;
+			this.body = body;
+		}
+
+		@Override
+		<R> R accept(Visitor<R> visitor) {
+			return visitor.visitFunctionStatement(this);
 		}
 	}
 }

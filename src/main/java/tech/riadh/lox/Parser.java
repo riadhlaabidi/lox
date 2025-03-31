@@ -38,11 +38,11 @@ class Parser {
 
 	/**
 	 * Parses a declaration statement. The declaration rule falls through to
-	 * parsing a statement if it doesn't match a variable declaration.
+	 * parsing a statement if it doesn't match a function or a variable declaration.
 	 *
-	 * declaration -> varDecl | statement;
+	 * declaration -> funDecl | varDecl | statement;
 	 *
-	 * @return A variable declaration statement, or an actual statement. In case of
+	 * @return A function, variable, or an actual declaration statement. In case of
 	 *         a parse error, the parser goes into panic mode and synchronizes
 	 *         tokens until the next valid state and returns null.
 	 */
@@ -51,11 +51,43 @@ class Parser {
 			if (match(TokenType.VAR)) {
 				return varDeclaration();
 			}
+			if (match(TokenType.FUN)) {
+				return function("function");
+			}
 			return statement();
 		} catch (ParseError error) {
 			synchronize();
 			return null;
 		}
+	}
+
+	/**
+	 * Parses and returns a function declaration statement.
+	 *
+	 * funDecl -> "fun" function;
+	 * function -> IDENTIFIER "(" parameters? ")" block;
+	 * parameters -> IDENTIFIER ("," IDENTIFIER)*;
+	 * 
+	 * @return A function declaration statement
+	 */
+	private Stmt.Function function(String kind) {
+		Token name = consume(TokenType.IDENTIFIER, "Expected " + kind + " name.");
+		consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.");
+		List<Token> parameters = new ArrayList<>();
+		if (!check(TokenType.RIGHT_PAREN)) {
+			do {
+				if (parameters.size() >= 255) {
+					error(peek(), "Can't have more than 255 parameters.");
+				}
+
+				parameters.add(consume(TokenType.IDENTIFIER, "Expected parameter name."));
+			} while (match(TokenType.COMMA));
+		}
+		consume(TokenType.RIGHT_PAREN, "Expected ')' after parameters");
+
+		consume(TokenType.LEFT_BRACE, "Expected '{' before " + kind + " body.");
+		List<Stmt> body = block();
+		return new Stmt.Function(name, parameters, body);
 	}
 
 	/**
@@ -99,7 +131,7 @@ class Parser {
 			return printStatement();
 		}
 		if (match(TokenType.LEFT_BRACE)) {
-			return block();
+			return new Stmt.Block(block());
 		}
 		return expressionStatement();
 	}
@@ -247,13 +279,14 @@ class Parser {
 	}
 
 	/**
-	 * Parses and returns a block statement.
+	 * Parses and returns a block statement. This method assumes that the block's
+	 * opening brace is already consumed.
 	 *
 	 * blockStmt -> "{" declarations* "}";
 	 *
 	 * @return A block statement
 	 */
-	private Stmt block() {
+	private List<Stmt> block() {
 		List<Stmt> statements = new ArrayList<>();
 
 		while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
@@ -261,7 +294,7 @@ class Parser {
 		}
 
 		consume(TokenType.RIGHT_BRACE, "Expected '}' after block.");
-		return new Stmt.Block(statements);
+		return statements;
 	}
 
 	/**
@@ -418,7 +451,7 @@ class Parser {
 	/**
 	 * Parses and returns a unary expression.
 	 *
-	 * unary -> ( "!" | "-" ) unary | primary;
+	 * unary -> ( "!" | "-" ) unary | call;
 	 * 
 	 * @return A unary expression
 	 */
@@ -429,7 +462,37 @@ class Parser {
 			return new Expr.Unary(operator, right);
 		}
 
-		return primary();
+		return call();
+	}
+
+	/**
+	 * Parses and returns a call expression.
+	 *
+	 * call -> primary ( "(" arguments? ")" )*;
+	 * arguments -> expression ("," expression)*;
+	 * 
+	 * @return A call expression
+	 */
+	private Expr call() {
+		Expr callee = primary();
+
+		while (match(TokenType.LEFT_PAREN)) {
+			List<Expr> args = new ArrayList<>();
+			if (!check(TokenType.RIGHT_PAREN)) {
+				// parse arguments
+				do {
+					if (args.size() >= 255) {
+						// same limit as java for later compatibility
+						error(peek(), "Can't have more than 255 arguments");
+					}
+					args.add(expression());
+				} while (match(TokenType.COMMA));
+			}
+			Token paren = consume(TokenType.RIGHT_PAREN, "Expected ')' after arguments.");
+			callee = new Expr.Call(callee, paren, args);
+		}
+
+		return callee;
 	}
 
 	/**
