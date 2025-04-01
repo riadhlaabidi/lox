@@ -222,6 +222,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 		return null;
 	}
 
+	@Override
+	public Void visitReturnStatement(Stmt.Return stmt) {
+		if (stmt.value != null) {
+			throw new Return(evaluate(stmt.value));
+		}
+		throw new Return(null);
+	}
+
 	/**
 	 * Executes a block statement in the context of a given environment.
 	 * This method changes the {@link #environment environment} field to the
@@ -257,6 +265,8 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 	/**
 	 * Interprets an expression.
+	 *
+	 * @return The evaluation of an expression
 	 */
 	private Object evaluate(Expr expr) {
 		return expr.accept(this);

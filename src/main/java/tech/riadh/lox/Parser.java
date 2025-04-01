@@ -74,6 +74,7 @@ class Parser {
 		Token name = consume(TokenType.IDENTIFIER, "Expected " + kind + " name.");
 		consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.");
 		List<Token> parameters = new ArrayList<>();
+
 		if (!check(TokenType.RIGHT_PAREN)) {
 			do {
 				if (parameters.size() >= 255) {
@@ -112,7 +113,8 @@ class Parser {
 	/**
 	 * Parses and returns a statement.
 	 *
-	 * statement -> exprStmt | ifStmt | whileStmt | forStmt | printStmt | blockStmt;
+	 * statement -> exprStmt | ifStmt | whileStmt | forStmt | printStmt | blockStmt
+	 * | returnStmt;
 	 * 
 	 * @return A statement, this could be a print statement or an expression
 	 *         statement.
@@ -132,6 +134,9 @@ class Parser {
 		}
 		if (match(TokenType.LEFT_BRACE)) {
 			return new Stmt.Block(block());
+		}
+		if (match(TokenType.RETURN)) {
+			return returnStatement();
 		}
 		return expressionStatement();
 	}
@@ -295,6 +300,23 @@ class Parser {
 
 		consume(TokenType.RIGHT_BRACE, "Expected '}' after block.");
 		return statements;
+	}
+
+	/**
+	 * Parses and returns a return statement.
+	 *
+	 * returnStmt -> "return" expression? ";";
+	 * 
+	 * @return A return statement
+	 */
+	private Stmt returnStatement() {
+		Token keyword = previous();
+		Expr value = null;
+		if (!check(TokenType.SEMICOLON)) {
+			value = expression();
+		}
+		consume(TokenType.SEMICOLON, "Expected ';' after return value.");
+		return new Stmt.Return(keyword, value);
 	}
 
 	/**
