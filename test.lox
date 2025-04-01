@@ -24,3 +24,31 @@ var counter = makeCounter();
 print "Counter closure";
 print counter(); // 1
 print counter(); // 2
+
+print "Anonymous functions";
+
+// primary statement
+fun () {};
+
+fun makeNoise(noise) {
+    print noise();
+}
+
+makeNoise(fun() {
+    return "woof";
+});
+
+fun whichFunction(f) {
+    print f;
+}
+
+whichFunction(fun(b) {
+    print b;
+});   // <fn>
+
+fun named(a) {
+    print a;
+}
+
+whichFunction(named); // <fn named>
+

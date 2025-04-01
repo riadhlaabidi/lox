@@ -2,28 +2,28 @@ package tech.riadh.lox;
 
 import java.util.List;
 
-import tech.riadh.lox.Stmt.Function;
-
 class LoxFunction implements LoxCallable {
-	private final Stmt.Function declaration;
+	private final String name;
+	private final Expr.Function declaration;
 	private final Environment closure;
 
-	LoxFunction(Function declaration, Environment closure) {
+	LoxFunction(String name, Expr.Function declaration, Environment closure) {
+		this.name = name;
 		this.declaration = declaration;
 		this.closure = closure;
 	}
 
 	@Override
 	public int arity() {
-		return declaration.params.size();
+		return declaration.parameters.size();
 	}
 
 	@Override
 	public Object call(Interpreter interpreter, List<Object> arguments) {
 		Environment env = new Environment(closure);
 
-		for (int i = 0; i < declaration.params.size(); i++) {
-			env.define(declaration.params.get(i).lexeme, arguments.get(i));
+		for (int i = 0; i < declaration.parameters.size(); i++) {
+			env.define(declaration.parameters.get(i).lexeme, arguments.get(i));
 		}
 
 		try {
@@ -37,6 +37,9 @@ class LoxFunction implements LoxCallable {
 
 	@Override
 	public String toString() {
-		return "<fn " + declaration.name.lexeme + ">";
+		if (name == null) {
+			return "<fn>";
+		}
+		return "<fn " + name + ">";
 	}
 }

@@ -51,7 +51,8 @@ class Parser {
 			if (match(TokenType.VAR)) {
 				return varDeclaration();
 			}
-			if (match(TokenType.FUN)) {
+			if (check(TokenType.FUN) && checkNext(TokenType.IDENTIFIER)) {
+				consume(TokenType.FUN, null);
 				return function("function");
 			}
 			return statement();
@@ -65,13 +66,25 @@ class Parser {
 	 * Parses and returns a function declaration statement.
 	 *
 	 * funDecl -> "fun" function;
-	 * function -> IDENTIFIER "(" parameters? ")" block;
-	 * parameters -> IDENTIFIER ("," IDENTIFIER)*;
+	 * function -> IDENTIFIER functionBody;
 	 * 
 	 * @return A function declaration statement
 	 */
 	private Stmt.Function function(String kind) {
 		Token name = consume(TokenType.IDENTIFIER, "Expected " + kind + " name.");
+		return new Stmt.Function(name, functionBody(kind));
+	}
+
+	/**
+	 * Parses and returns a functions body expression, including parameters list and
+	 * statements block.
+	 *
+	 * functionBody -> "(" parameters? ")" block;
+	 * parameters -> IDENTIFIER ("," IDENTIFIER)*;
+	 *
+	 * @return A function body expression
+	 */
+	private Expr.Function functionBody(String kind) {
 		consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.");
 		List<Token> parameters = new ArrayList<>();
 
@@ -88,7 +101,7 @@ class Parser {
 
 		consume(TokenType.LEFT_BRACE, "Expected '{' before " + kind + " body.");
 		List<Stmt> body = block();
-		return new Stmt.Function(name, parameters, body);
+		return new Expr.Function(parameters, body);
 	}
 
 	/**
@@ -521,7 +534,7 @@ class Parser {
 	 * Parses and returns a primary expression.
 	 *
 	 * primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" |
-	 * IDENTIFIER;
+	 * IDENTIFIER | functionBody ;
 	 * 
 	 * @return A primary expression
 	 * @throws ParseError If it does not match a valid primary token
@@ -551,6 +564,10 @@ class Parser {
 			Expr expr = expression();
 			consume(TokenType.RIGHT_PAREN, "Expected ')' after expression");
 			return new Expr.Grouping(expr);
+		}
+
+		if (match(TokenType.FUN)) {
+			return functionBody("function");
 		}
 
 		throw error(peek(), "Expected an expression.");
@@ -612,6 +629,23 @@ class Parser {
 			return false;
 		}
 		return peek().type == type;
+	}
+
+	/**
+	 * Looks ahead and checks if the next to current token is of the given type.
+	 * 
+	 * @param type Token type to check the next to current one on
+	 * @return true if the next to current token is of the given type, false
+	 *         otherwise
+	 */
+	private boolean checkNext(TokenType type) {
+		if (isAtEnd()) {
+			return false;
+		}
+		if (tokens.get(current + 1).type == TokenType.EOF) {
+			return false;
+		}
+		return tokens.get(current + 1).type == type;
 	}
 
 	/*
