@@ -3,6 +3,7 @@ fun fib(n) {
     return fib(n - 2) + fib(n - 1);
 }
 
+print "Fibonacci sequence";
 for (var i = 0; i < 20; i = i + 1) {
     print fib(i);
 }
@@ -24,3 +25,15 @@ var counter = makeCounter();
 print "Counter closure";
 print counter(); // 1
 print counter(); // 2
+
+var a = "global";
+{
+    fun showA() {
+        print a;
+    }
+
+    showA(); // global
+    var a = "local";
+    showA(); // global
+}
+

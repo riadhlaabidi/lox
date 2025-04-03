@@ -59,6 +59,19 @@ class Environment {
 	}
 
 	/**
+	 * Returns the value of the variable at a given distance of enclosing
+	 * environments.
+	 * 
+	 * @param distance The distance to go up before getting the value of the
+	 *                 variable.
+	 * @param name     The name of the variable.
+	 * @return The value of the variable
+	 */
+	Object getAt(int distance, String name) {
+		return ancestor(distance).values.get(name);
+	}
+
+	/**
 	 * Assigns a value to an existing variable. Unlike
 	 * {@link #define(String, Object) Define}, this method is not allowed to create
 	 * a new variable.
@@ -83,4 +96,30 @@ class Environment {
 		throw new RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
 	}
 
+	/**
+	 * Assigns a new value to a variable with the given name at the given distance
+	 * far from the current environment.
+	 *
+	 * @param distance The distance to go up before assigning the variable.
+	 * @param name     The variable name.
+	 * @param value    The value to assign.
+	 */
+	void assignAt(int distance, Token name, Object value) {
+		ancestor(distance).values.put(name.lexeme, value);
+	}
+
+	/**
+	 * Returns the ancestor of the current environment that is a given distance away
+	 * from the current one.
+	 * 
+	 * @param distance The distance to go up from the current environment
+	 * @return The distance-th ancestor environment
+	 */
+	private Environment ancestor(int distance) {
+		Environment environment = this;
+		for (int i = 0; i < distance; i++) {
+			environment = environment.enclosing;
+		}
+		return environment;
+	}
 }

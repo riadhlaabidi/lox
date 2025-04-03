@@ -1,7 +1,9 @@
 package tech.riadh.lox;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import tech.riadh.lox.Expr.Assign;
 import tech.riadh.lox.Expr.Binary;
@@ -18,6 +20,7 @@ import tech.riadh.lox.Stmt.Var;
 import tech.riadh.lox.Stmt.While;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+	private final Map<Expr, Integer> locals = new HashMap<>();
 	final Environment globals = new Environment();
 	private Environment environment = globals;
 
@@ -137,13 +140,27 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 	@Override
 	public Object visitVariableExpr(Variable expr) {
-		return environment.get(expr.name);
+		return lookUpVariable(expr.name, expr);
+	}
+
+	private Object lookUpVariable(Token name, Expr expr) {
+		Integer distance = locals.get(expr);
+		if (distance != null) {
+			return environment.getAt(distance, name.lexeme);
+		}
+		return globals.get(name);
 	}
 
 	@Override
 	public Object visitAssignExpr(Assign expr) {
 		Object value = evaluate(expr.value);
-		environment.assign(expr.name, value);
+
+		Integer distance = locals.get(expr);
+		if (distance != null) {
+			environment.assignAt(distance, expr.name, value);
+		} else {
+			globals.assign(expr.name, value);
+		}
 		return value;
 	}
 
@@ -277,6 +294,10 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 	 */
 	private void execute(Stmt stmt) {
 		stmt.accept(this);
+	}
+
+	void resolve(Expr expr, int depth) {
+		locals.put(expr, depth);
 	}
 
 	private boolean isTruthy(Object o) {
