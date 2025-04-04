@@ -40,7 +40,7 @@ class Parser {
 	 * Parses a declaration statement. The declaration rule falls through to
 	 * parsing a statement if it doesn't match a function or a variable declaration.
 	 *
-	 * declaration -> funDecl | varDecl | statement;
+	 * declaration -> funDecl | classDecl | varDecl | statement;
 	 *
 	 * @return A function, variable, or an actual declaration statement. In case of
 	 *         a parse error, the parser goes into panic mode and synchronizes
@@ -48,11 +48,14 @@ class Parser {
 	 */
 	private Stmt declaration() {
 		try {
-			if (match(TokenType.VAR)) {
-				return varDeclaration();
-			}
 			if (match(TokenType.FUN)) {
 				return function("function");
+			}
+			if (match(TokenType.CLASS)) {
+				return classDeclaration();
+			}
+			if (match(TokenType.VAR)) {
+				return varDeclaration();
 			}
 			return statement();
 		} catch (ParseError error) {
@@ -89,6 +92,27 @@ class Parser {
 		consume(TokenType.LEFT_BRACE, "Expected '{' before " + kind + " body.");
 		List<Stmt> body = block();
 		return new Stmt.Function(name, parameters, body);
+	}
+
+	/**
+	 * Parses and returns a class declaration statement.
+	 *
+	 * classDecl -> "class" IDENTIFIER "{" function* "}";
+	 * 
+	 * @return A class declaration statement
+	 */
+	private Stmt classDeclaration() {
+		Token name = consume(TokenType.IDENTIFIER, "Expected class name.");
+		consume(TokenType.LEFT_BRACE, "Expected '{' before class body.");
+
+		List<Stmt.Function> methods = new ArrayList<>();
+		while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+			methods.add(function("method"));
+		}
+
+		consume(TokenType.RIGHT_BRACE, "Expected '}' after class body.");
+
+		return new Stmt.Class(name, methods);
 	}
 
 	/**

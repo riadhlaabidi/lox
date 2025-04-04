@@ -14,6 +14,7 @@ import tech.riadh.lox.Expr.Logical;
 import tech.riadh.lox.Expr.Unary;
 import tech.riadh.lox.Expr.Variable;
 import tech.riadh.lox.Stmt.Block;
+import tech.riadh.lox.Stmt.Class;
 import tech.riadh.lox.Stmt.Function;
 import tech.riadh.lox.Stmt.If;
 import tech.riadh.lox.Stmt.Var;
@@ -245,6 +246,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 			throw new Return(evaluate(stmt.value));
 		}
 		throw new Return(null);
+	}
+
+	@Override
+	public Void visitClassStatement(Class stmt) {
+		environment.define(stmt.name.lexeme, null);
+		LoxClass loxClass = new LoxClass(stmt.name.lexeme);
+		environment.assign(stmt.name, loxClass);
+		return null;
 	}
 
 	/**

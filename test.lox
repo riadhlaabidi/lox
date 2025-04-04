@@ -37,3 +37,11 @@ var a = "global";
     showA(); // global
 }
 
+class TestClass {
+    method() {
+        print "I am a method!";
+    }
+}
+
+print TestClass;
+

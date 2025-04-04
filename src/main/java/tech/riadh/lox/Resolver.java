@@ -104,6 +104,13 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	}
 
 	@Override
+	public Void visitClassStatement(Stmt.Class stmt) {
+		declare(stmt.name);
+		define(stmt.name);
+		return null;
+	}
+
+	@Override
 	public Void visitBinaryExpr(Binary expr) {
 		resolve(expr.left);
 		resolve(expr.right);
