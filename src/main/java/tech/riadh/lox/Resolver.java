@@ -12,7 +12,6 @@ import tech.riadh.lox.Expr.Grouping;
 import tech.riadh.lox.Expr.Literal;
 import tech.riadh.lox.Expr.Logical;
 import tech.riadh.lox.Expr.Unary;
-import tech.riadh.lox.Expr.Variable;
 import tech.riadh.lox.Stmt.Block;
 import tech.riadh.lox.Stmt.Expression;
 import tech.riadh.lox.Stmt.Function;
@@ -23,12 +22,29 @@ import tech.riadh.lox.Stmt.Var;
 import tech.riadh.lox.Stmt.While;
 
 class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
+
+	private enum VarState {
+		DECLARED,
+		DEFINED,
+		READ
+	}
+
+	private static class Variable {
+		final Token name;
+		VarState state;
+
+		private Variable(Token name, VarState state) {
+			this.name = name;
+			this.state = state;
+		}
+	}
+
 	/**
 	 * Stores scopes' mappings while resolving variables, each variable is
 	 * represented by its name and a boolean flag indicating whether or not the
 	 * resolution is finished.
 	 */
-	private final Stack<Map<String, Boolean>> scopes = new Stack<>();
+	private final Stack<Map<String, Variable>> scopes = new Stack<>();
 
 	private final Interpreter interpreter;
 	private FunctionType currentFunction = FunctionType.NONE;
@@ -135,18 +151,23 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	}
 
 	@Override
-	public Void visitVariableExpr(Variable expr) {
-		if (!scopes.isEmpty() && scopes.peek().get(expr.name.lexeme) == Boolean.FALSE) {
-			Lox.error(expr.name, "Can't read local variable in its own initializer");
+	public Void visitVariableExpr(Expr.Variable expr) {
+		if (!scopes.isEmpty()) {
+			Variable v = scopes.peek().get(expr.name.lexeme);
+			if (v != null && v.state == VarState.DECLARED) {
+				Lox.error(expr.name, "Can't read local variable in its own initializer");
+			}
 		}
-		resolveLocal(expr, expr.name);
+		// resolving a variable expression is considered as usage
+		resolveLocal(expr, expr.name, true);
 		return null;
 	}
 
 	@Override
 	public Void visitAssignExpr(Assign expr) {
 		resolve(expr.value);
-		resolveLocal(expr, expr.name);
+		// assingment is not considered as usage
+		resolveLocal(expr, expr.name, false);
 		return null;
 	}
 
@@ -188,14 +209,19 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	 * Begins a new scope by pushing a new HashMap to the scopes stack.
 	 */
 	private void beginScope() {
-		scopes.push(new HashMap<String, Boolean>());
+		scopes.push(new HashMap<String, Variable>());
 	}
 
 	/**
 	 * Ends the current scope by popping it out from the stack.
 	 */
 	private void endScope() {
-		scopes.pop();
+		Map<String, Variable> popped = scopes.pop();
+		popped.forEach((name, variable) -> {
+			if (variable.state == VarState.DEFINED) {
+				Lox.error(variable.name, "Local variable never used.");
+			}
+		});
 	}
 
 	/**
@@ -208,11 +234,11 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 		if (scopes.isEmpty()) {
 			return;
 		}
-		Map<String, Boolean> scope = scopes.peek();
+		Map<String, Variable> scope = scopes.peek();
 		if (scope.containsKey(name.lexeme)) {
 			Lox.error(name, "Already a variable with this name in this scope.");
 		}
-		scope.put(name.lexeme, false);
+		scope.put(name.lexeme, new Variable(name, VarState.DECLARED));
 	}
 
 	/**
@@ -226,13 +252,18 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 		if (scopes.isEmpty()) {
 			return;
 		}
-		scopes.peek().put(name.lexeme, true);
+		scopes.peek().put(name.lexeme, new Variable(name, VarState.DEFINED));
 	}
 
-	private void resolveLocal(Expr expr, Token name) {
+	private void resolveLocal(Expr expr, Token name, boolean isRead) {
 		for (int i = scopes.size() - 1; i >= 0; i--) {
 			if (scopes.get(i).containsKey(name.lexeme)) {
 				interpreter.resolve(expr, scopes.size() - 1 - i);
+
+				if (isRead) { // mark as used
+					scopes.get(i).get(name.lexeme).state = VarState.READ;
+				}
+
 				return;
 			}
 		}
