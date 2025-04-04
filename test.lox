@@ -44,4 +44,6 @@ class TestClass {
 }
 
 print TestClass;
+var instance = TestClass();
+print instance;
 
