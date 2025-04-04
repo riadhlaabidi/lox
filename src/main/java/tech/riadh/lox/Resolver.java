@@ -32,10 +32,12 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	private static class Variable {
 		final Token name;
 		VarState state;
+		final int slot;
 
-		private Variable(Token name, VarState state) {
+		private Variable(Token name, VarState state, int slot) {
 			this.name = name;
 			this.state = state;
+			this.slot = slot;
 		}
 	}
 
@@ -45,9 +47,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	 * resolution is finished.
 	 */
 	private final Stack<Map<String, Variable>> scopes = new Stack<>();
-
-	private final Interpreter interpreter;
 	private FunctionType currentFunction = FunctionType.NONE;
+	private final Interpreter interpreter;
 
 	Resolver(Interpreter interpreter) {
 		this.interpreter = interpreter;
@@ -238,7 +239,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 		if (scope.containsKey(name.lexeme)) {
 			Lox.error(name, "Already a variable with this name in this scope.");
 		}
-		scope.put(name.lexeme, new Variable(name, VarState.DECLARED));
+		scope.put(name.lexeme, new Variable(name, VarState.DECLARED, scope.size()));
 	}
 
 	/**
@@ -252,16 +253,17 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 		if (scopes.isEmpty()) {
 			return;
 		}
-		scopes.peek().put(name.lexeme, new Variable(name, VarState.DEFINED));
+		scopes.peek().get(name.lexeme).state = VarState.DEFINED;
 	}
 
 	private void resolveLocal(Expr expr, Token name, boolean isRead) {
 		for (int i = scopes.size() - 1; i >= 0; i--) {
-			if (scopes.get(i).containsKey(name.lexeme)) {
-				interpreter.resolve(expr, scopes.size() - 1 - i);
+			Map<String, Variable> scope = scopes.get(i);
+			if (scope.containsKey(name.lexeme)) {
+				interpreter.resolve(expr, scopes.size() - 1 - i, scope.get(name.lexeme).slot);
 
 				if (isRead) { // mark as used
-					scopes.get(i).get(name.lexeme).state = VarState.READ;
+					scope.get(name.lexeme).state = VarState.READ;
 				}
 
 				return;

@@ -23,7 +23,7 @@ class LoxFunction implements LoxCallable {
 		Environment env = new Environment(closure);
 
 		for (int i = 0; i < declaration.params.size(); i++) {
-			env.define(declaration.params.get(i).lexeme, arguments.get(i));
+			env.define(arguments.get(i));
 		}
 
 		try {

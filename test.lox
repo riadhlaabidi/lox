@@ -1,3 +1,11 @@
+var greeting = "Hello, world!";
+
+fun greet() {
+    print greeting;
+}
+
+greet();
+
 fun fib(n) {
     if (n <= 1) return n;
     return fib(n - 2) + fib(n - 1);
@@ -7,7 +15,6 @@ print "Fibonacci sequence";
 for (var i = 0; i < 20; i = i + 1) {
     print fib(i);
 }
-
 
 fun makeCounter() {
     var i = 0;
@@ -20,12 +27,12 @@ fun makeCounter() {
     return count;
 }
 
-var counter = makeCounter();
-
 print "Counter closure";
+var counter = makeCounter();
 print counter(); // 1
 print counter(); // 2
 
+print "Closure snapshot";
 var a = "global";
 {
     fun showA() {
@@ -35,5 +42,5 @@ var a = "global";
     showA(); // global
     var a = "local";
     showA(); // global
+    print a; // local
 }
-
