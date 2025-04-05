@@ -8,9 +8,11 @@ import java.util.Map;
 import tech.riadh.lox.Expr.Assign;
 import tech.riadh.lox.Expr.Binary;
 import tech.riadh.lox.Expr.Call;
+import tech.riadh.lox.Expr.Get;
 import tech.riadh.lox.Expr.Grouping;
 import tech.riadh.lox.Expr.Literal;
 import tech.riadh.lox.Expr.Logical;
+import tech.riadh.lox.Expr.Set;
 import tech.riadh.lox.Expr.Unary;
 import tech.riadh.lox.Expr.Variable;
 import tech.riadh.lox.Stmt.Block;
@@ -184,6 +186,30 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 					"Exptected " + function.arity() + " arguments but got " + args.size() + ".");
 		}
 		return function.call(this, args);
+	}
+
+	@Override
+	public Object visitGetExpr(Get expr) {
+		Object object = evaluate(expr.object);
+
+		if (object instanceof LoxInstance) {
+			return ((LoxInstance) object).get(expr.name);
+		}
+
+		throw new RuntimeError(expr.name, "Only instances have properties.");
+	}
+
+	@Override
+	public Object visitSetExpr(Set expr) {
+		Object object = evaluate(expr.object);
+
+		if (object instanceof LoxInstance) {
+			Object value = evaluate(expr.value);
+			((LoxInstance) object).set(expr.name, value);
+			return value;
+		}
+
+		throw new RuntimeError(expr.name, "Only instances have fields.");
 	}
 
 	@Override

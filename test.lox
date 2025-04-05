@@ -43,7 +43,8 @@ class TestClass {
     }
 }
 
-print TestClass;
 var instance = TestClass();
-print instance;
+instance.name = "Testy";
+instance.age = "infant";
+
 

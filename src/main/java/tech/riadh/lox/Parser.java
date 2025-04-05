@@ -357,7 +357,7 @@ class Parser {
 	/**
 	 * Parses and returns an assignment expression.
 	 *
-	 * assignment -> IDENTIFIER "=" assignment | logic_or;
+	 * assignment -> (call ".")? IDENTIFIER "=" assignment | logic_or;
 	 *
 	 * @return An assignment expression
 	 */
@@ -371,6 +371,9 @@ class Parser {
 			if (expr instanceof Expr.Variable) {
 				Expr.Variable v = (Expr.Variable) expr;
 				return new Expr.Assign(v.name, value);
+			} else if (expr instanceof Expr.Get) {
+				Expr.Get get = (Expr.Get) expr;
+				return new Expr.Set(get.object, get.name, value);
 			}
 
 			// report an error without throwing, the parser is in a valid state
@@ -514,31 +517,38 @@ class Parser {
 	/**
 	 * Parses and returns a call expression.
 	 *
-	 * call -> primary ( "(" arguments? ")" )*;
+	 * call -> primary ( "(" arguments? ")" | "." IDENTIFIER)*;
 	 * arguments -> expression ("," expression)*;
 	 * 
 	 * @return A call expression
 	 */
 	private Expr call() {
-		Expr callee = primary();
+		Expr expr = primary();
 
-		while (match(TokenType.LEFT_PAREN)) {
-			List<Expr> args = new ArrayList<>();
-			if (!check(TokenType.RIGHT_PAREN)) {
-				// parse arguments
-				do {
-					if (args.size() >= 255) {
-						// same limit as java for later compatibility
-						error(peek(), "Can't have more than 255 arguments");
-					}
-					args.add(expression());
-				} while (match(TokenType.COMMA));
+		while (true) {
+			if (match(TokenType.LEFT_PAREN)) {
+				List<Expr> args = new ArrayList<>();
+				if (!check(TokenType.RIGHT_PAREN)) {
+					// parse arguments
+					do {
+						if (args.size() >= 255) {
+							// same limit as java for later compatibility
+							error(peek(), "Can't have more than 255 arguments");
+						}
+						args.add(expression());
+					} while (match(TokenType.COMMA));
+				}
+				Token paren = consume(TokenType.RIGHT_PAREN, "Expected ')' after arguments.");
+				expr = new Expr.Call(expr, paren, args);
+			} else if (match(TokenType.DOT)) {
+				Token name = consume(TokenType.IDENTIFIER, "Expected property name after '.'");
+				expr = new Expr.Get(expr, name);
+			} else {
+				break;
 			}
-			Token paren = consume(TokenType.RIGHT_PAREN, "Expected ')' after arguments.");
-			callee = new Expr.Call(callee, paren, args);
 		}
 
-		return callee;
+		return expr;
 	}
 
 	/**

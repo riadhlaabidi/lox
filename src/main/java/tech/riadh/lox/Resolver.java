@@ -8,9 +8,11 @@ import java.util.Stack;
 import tech.riadh.lox.Expr.Assign;
 import tech.riadh.lox.Expr.Binary;
 import tech.riadh.lox.Expr.Call;
+import tech.riadh.lox.Expr.Get;
 import tech.riadh.lox.Expr.Grouping;
 import tech.riadh.lox.Expr.Literal;
 import tech.riadh.lox.Expr.Logical;
+import tech.riadh.lox.Expr.Set;
 import tech.riadh.lox.Expr.Unary;
 import tech.riadh.lox.Expr.Variable;
 import tech.riadh.lox.Stmt.Block;
@@ -163,6 +165,19 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 		for (Expr arg : expr.arguments) {
 			resolve(arg);
 		}
+		return null;
+	}
+
+	@Override
+	public Void visitGetExpr(Get expr) {
+		resolve(expr);
+		return null;
+	}
+
+	@Override
+	public Void visitSetExpr(Set expr) {
+		resolve(expr.object);
+		resolve(expr.value);
 		return null;
 	}
 
