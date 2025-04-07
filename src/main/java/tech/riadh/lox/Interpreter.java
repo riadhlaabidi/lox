@@ -13,6 +13,7 @@ import tech.riadh.lox.Expr.Grouping;
 import tech.riadh.lox.Expr.Literal;
 import tech.riadh.lox.Expr.Logical;
 import tech.riadh.lox.Expr.Set;
+import tech.riadh.lox.Expr.This;
 import tech.riadh.lox.Expr.Unary;
 import tech.riadh.lox.Expr.Variable;
 import tech.riadh.lox.Stmt.Block;
@@ -213,6 +214,11 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 	}
 
 	@Override
+	public Object visitThisExpr(This expr) {
+		return lookUpVariable(expr.keyword, expr);
+	}
+
+	@Override
 	public Void visitVarStatement(Var stmt) {
 		Object value = null;
 		if (stmt.initializer != null) {
@@ -277,7 +283,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 	@Override
 	public Void visitClassStatement(Class stmt) {
 		environment.define(stmt.name.lexeme, null);
-		LoxClass loxClass = new LoxClass(stmt.name.lexeme);
+
+		Map<String, LoxFunction> methods = new HashMap<>();
+		for (Stmt.Function method : stmt.methods) {
+			LoxFunction m = new LoxFunction(method, environment);
+			methods.put(method.name.lexeme, m);
+		}
+
+		LoxClass loxClass = new LoxClass(stmt.name.lexeme, methods);
 		environment.assign(stmt.name, loxClass);
 		return null;
 	}

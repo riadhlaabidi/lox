@@ -22,7 +22,7 @@ fun makeCounter() {
 
 var counter = makeCounter();
 
-print "Counter closure";
+print "Counter closure"; 
 print counter(); // 1
 print counter(); // 2
 
@@ -37,14 +37,37 @@ var a = "global";
     showA(); // global
 }
 
-class TestClass {
-    method() {
-        print "I am a method!";
+class Bacon {
+    eat() {
+        print "Eating bacon with " + this.supplement;
+    }
+
+    getCallback() {
+        fun callback() {
+            print "Hi I'm calling back, my this is: ";
+            print this;
+            print "And my supplement is " + this.supplement;
+        }
+        return callback;
     }
 }
 
-var instance = TestClass();
-instance.name = "Testy";
-instance.age = "infant";
+var b = Bacon();
+b.supplement = "Eggs";
+b.eat();
+b.getCallback()();
 
+class AnotherBacon {
+    getCallback() {
+        fun callback() {
+            print "Hi I'm calling back, my this is:";
+            print this;
+            print "And my supplement is " + this.supplement;
+        }
+        return callback;
+    }
+}
 
+var ab = AnotherBacon();
+ab.supplement = "Bread";
+ab.getCallback()();

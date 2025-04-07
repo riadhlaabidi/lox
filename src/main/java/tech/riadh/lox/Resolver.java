@@ -13,6 +13,7 @@ import tech.riadh.lox.Expr.Grouping;
 import tech.riadh.lox.Expr.Literal;
 import tech.riadh.lox.Expr.Logical;
 import tech.riadh.lox.Expr.Set;
+import tech.riadh.lox.Expr.This;
 import tech.riadh.lox.Expr.Unary;
 import tech.riadh.lox.Expr.Variable;
 import tech.riadh.lox.Stmt.Block;
@@ -34,6 +35,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
 	private final Interpreter interpreter;
 	private FunctionType currentFunction = FunctionType.NONE;
+	private ClassType currentClass = ClassType.NONE;
 
 	Resolver(Interpreter interpreter) {
 		this.interpreter = interpreter;
@@ -96,7 +98,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
 	@Override
 	public Void visitReturnStatement(Return stmt) {
-		if (currentFunction != FunctionType.FUNCTION) {
+		if (currentFunction != FunctionType.FUNCTION && currentFunction != FunctionType.METHOD) {
 			Lox.error(stmt.keyword, "Can't return outside of a function.");
 		}
 		if (stmt.value != null) {
@@ -107,8 +109,22 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
 	@Override
 	public Void visitClassStatement(Stmt.Class stmt) {
+		ClassType enclosingClass = currentClass;
+		currentClass = ClassType.CLASS;
+
 		declare(stmt.name);
 		define(stmt.name);
+
+		beginScope();
+		scopes.peek().put("this", true);
+
+		for (Stmt.Function method : stmt.methods) {
+			FunctionType declaration = FunctionType.METHOD;
+			resolveFunction(method, declaration);
+		}
+
+		endScope();
+		currentClass = enclosingClass;
 		return null;
 	}
 
@@ -170,7 +186,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
 	@Override
 	public Void visitGetExpr(Get expr) {
-		resolve(expr);
+		resolve(expr.object);
 		return null;
 	}
 
@@ -178,6 +194,16 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	public Void visitSetExpr(Set expr) {
 		resolve(expr.object);
 		resolve(expr.value);
+		return null;
+	}
+
+	@Override
+	public Void visitThisExpr(This expr) {
+		if (currentClass == ClassType.NONE) {
+			Lox.error(expr.keyword, "Can't use 'this' outside of a class");
+			return null;
+		}
+		resolveLocal(expr, expr.keyword);
 		return null;
 	}
 
@@ -262,7 +288,10 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
 	/**
 	 * Resolves a function body by creating a new scope and binding variables for
-	 * each of the function's paramerters.
+	 * each of the function's parameters.
+	 *
+	 * @param function The function statement to resolve
+	 * @param type     The function type
 	 */
 	private void resolveFunction(Stmt.Function function, FunctionType type) {
 		FunctionType enclosingFunction = currentFunction;
