@@ -7,16 +7,18 @@ import tech.riadh.lox.Stmt.Function;
 class LoxFunction implements LoxCallable {
 	private final Stmt.Function declaration;
 	private final Environment closure;
+	private final boolean isInitializer;
 
-	LoxFunction(Function declaration, Environment closure) {
+	LoxFunction(Function declaration, Environment closure, boolean isInitializer) {
 		this.declaration = declaration;
 		this.closure = closure;
+		this.isInitializer = isInitializer;
 	}
 
 	LoxFunction bind(LoxInstance instance) {
 		Environment environment = new Environment();
 		environment.define("this", instance);
-		return new LoxFunction(declaration, environment);
+		return new LoxFunction(declaration, environment, isInitializer);
 	}
 
 	@Override
@@ -35,7 +37,14 @@ class LoxFunction implements LoxCallable {
 		try {
 			interpreter.executeBlock(declaration.body, env);
 		} catch (Return e) {
+			if (isInitializer) {
+				return closure.getAt(0, "this");
+			}
 			return e.value;
+		}
+
+		if (isInitializer) {
+			return closure.getAt(0, "this");
 		}
 
 		return null;

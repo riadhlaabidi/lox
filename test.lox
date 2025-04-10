@@ -37,6 +37,8 @@ var a = "global";
     showA(); // global
 }
 
+print "---- Handle 'this' ---- ";
+
 class Bacon {
     eat() {
         print "Eating bacon with " + this.supplement;
@@ -71,3 +73,24 @@ class AnotherBacon {
 var ab = AnotherBacon();
 ab.supplement = "Bread";
 ab.getCallback()();
+
+
+print "---- Class constructors ---- ";
+
+class Token {
+    init(lexeme, line, col) {
+        this.lexeme = lexeme;
+        this.line = line;
+        this.col = col;
+    }
+
+    toString() {
+        print this.lexeme; 
+        print this.line; 
+        print this.col; 
+    }
+}
+
+var t = Token("defer", 2, 4);
+t.toString();
+
