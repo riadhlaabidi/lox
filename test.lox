@@ -100,6 +100,21 @@ class Math {
 
 print Math.sqrt(2);
 
-Math.PI = 3.14;
+Math.PI = 3.141592653;
 print Math.PI;
+
+print "---- Property getter methods ---- ";
+
+class Circle {
+    init(radius) {
+        this.radius = radius;
+    }
+
+    area {
+        return Math.PI * Math.sqrt(this.radius);
+    }
+}
+
+var c = Circle(4);
+print c.area;
 
