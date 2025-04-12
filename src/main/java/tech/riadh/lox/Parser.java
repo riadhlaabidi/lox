@@ -106,13 +106,15 @@ class Parser {
 		consume(TokenType.LEFT_BRACE, "Expected '{' before class body.");
 
 		List<Stmt.Function> methods = new ArrayList<>();
+		List<Stmt.Function> classMethods = new ArrayList<>();
+
 		while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-			methods.add(function("method"));
+			(match(TokenType.CLASS) ? classMethods : methods).add(function("method"));
 		}
 
 		consume(TokenType.RIGHT_BRACE, "Expected '}' after class body.");
 
-		return new Stmt.Class(name, methods);
+		return new Stmt.Class(name, methods, classMethods);
 	}
 
 	/**

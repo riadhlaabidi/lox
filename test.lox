@@ -78,19 +78,28 @@ ab.getCallback()();
 print "---- Class constructors ---- ";
 
 class Token {
-    init(lexeme, line, col) {
+    init(lexeme) {
         this.lexeme = lexeme;
-        this.line = line;
-        this.col = col;
     }
 
     toString() {
         print this.lexeme; 
-        print this.line; 
-        print this.col; 
     }
 }
 
-var t = Token("defer", 2, 4);
+var t = Token("defer");
 t.toString();
+
+print "---- Class (static) methods ---- ";
+
+class Math {
+    class sqrt(n) {
+        return n * n;
+    }
+}
+
+print Math.sqrt(2);
+
+Math.PI = 3.14;
+print Math.PI;
 
