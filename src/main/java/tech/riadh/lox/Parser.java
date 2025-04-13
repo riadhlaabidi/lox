@@ -97,12 +97,19 @@ class Parser {
 	/**
 	 * Parses and returns a class declaration statement.
 	 *
-	 * classDecl -> "class" IDENTIFIER "{" function* "}";
+	 * classDecl -> "class" IDENTIFIER ("<" IDENTIFIER)? "{" function* "}";
 	 * 
 	 * @return A class declaration statement
 	 */
 	private Stmt classDeclaration() {
 		Token name = consume(TokenType.IDENTIFIER, "Expected class name.");
+		Expr.Variable superclass = null;
+
+		if (match(TokenType.LESS)) {
+			Token scn = consume(TokenType.IDENTIFIER, "Expected superclass name after '<'.");
+			superclass = new Expr.Variable(scn);
+		}
+
 		consume(TokenType.LEFT_BRACE, "Expected '{' before class body.");
 
 		List<Stmt.Function> methods = new ArrayList<>();
@@ -112,7 +119,7 @@ class Parser {
 
 		consume(TokenType.RIGHT_BRACE, "Expected '}' after class body.");
 
-		return new Stmt.Class(name, methods);
+		return new Stmt.Class(name, superclass, methods);
 	}
 
 	/**

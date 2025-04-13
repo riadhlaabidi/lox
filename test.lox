@@ -94,3 +94,13 @@ class Token {
 var t = Token("defer", 2, 4);
 t.toString();
 
+print "---- Inheritance ---- ";
+
+class Car {
+    start() {}
+    accelerate() {}
+}
+
+class Wallys < Car {
+
+}
