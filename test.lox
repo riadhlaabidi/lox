@@ -97,10 +97,18 @@ t.toString();
 print "---- Inheritance ---- ";
 
 class Car {
-    start() {}
-    accelerate() {}
+    start() {
+        print "Started...";
+    }
+
+    accelerate() {
+        print "Speeding up...";
+    }
 }
 
 class Wallys < Car {
 
 }
+
+Wallys().start();
+Wallys().accelerate();

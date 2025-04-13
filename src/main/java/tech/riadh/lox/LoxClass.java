@@ -14,10 +14,23 @@ class LoxClass implements LoxCallable {
 		this.methods = methods;
 	}
 
+	/**
+	 * Finds by name and returns a {@link LoxFunction} instance of a method in this
+	 * class or its superclass.
+	 *
+	 * @param name The name of the method to find
+	 * @return The instance of that method if it is found, otherwise it returns
+	 *         null.
+	 */
 	LoxFunction findMethod(String name) {
 		if (methods.containsKey(name)) {
 			return methods.get(name);
 		}
+
+		if (superclass != null) {
+			return superclass.findMethod(name);
+		}
+
 		return null;
 	}
 
