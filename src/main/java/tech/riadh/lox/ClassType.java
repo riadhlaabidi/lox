@@ -1,6 +1,7 @@
 package tech.riadh.lox;
 
 enum ClassType {
+	CLASS,
 	NONE,
-	CLASS
+	SUBCLASS
 }

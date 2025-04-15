@@ -123,6 +123,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 			if (stmt.name.lexeme.equals(stmt.superclass.name.lexeme)) {
 				Lox.error(stmt.superclass.name, "A class can't inherit from itself.");
 			}
+			currentClass = ClassType.SUBCLASS;
 			resolve(stmt.superclass);
 			beginScope();
 			scopes.peek().put("super", true);
@@ -230,6 +231,12 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
 	@Override
 	public Void visitSuperExpr(Super expr) {
+		if (currentClass == ClassType.NONE) {
+			Lox.error(expr.keyword, "Can't use 'super' outside of a class.");
+		} else if (currentClass != ClassType.SUBCLASS) {
+			Lox.error(expr.keyword, "'super' can only be used in a subclass.");
+		}
+
 		resolveLocal(expr, expr.keyword);
 		return null;
 	}
