@@ -107,7 +107,10 @@ class Car {
 }
 
 class Wallys < Car {
-
+    start() {
+        super.start();
+        print "Turning indicators on...";
+    }
 }
 
 Wallys().start();

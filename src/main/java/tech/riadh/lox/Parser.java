@@ -561,8 +561,8 @@ class Parser {
 	/**
 	 * Parses and returns a primary expression.
 	 *
-	 * primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" |
-	 * IDENTIFIER;
+	 * primary -> "false" | "nil" | "this" | "true" | IDENTIFIER | NUMBER | STRING |
+	 * "(" expression ")" | "super" "." IDENTIFIER;
 	 * 
 	 * @return A primary expression
 	 * @throws ParseError If it does not match a valid primary token
@@ -572,30 +572,37 @@ class Parser {
 			return new Expr.Literal(false);
 		}
 
-		if (match(TokenType.TRUE)) {
-			return new Expr.Literal(true);
-		}
-
 		if (match(TokenType.NIL)) {
 			return new Expr.Literal(null);
-		}
-
-		if (match(TokenType.NUMBER, TokenType.STRING)) {
-			return new Expr.Literal(previous().literal);
 		}
 
 		if (match(TokenType.THIS)) {
 			return new Expr.This(previous());
 		}
 
+		if (match(TokenType.TRUE)) {
+			return new Expr.Literal(true);
+		}
+
 		if (match(TokenType.IDENTIFIER)) {
 			return new Expr.Variable(previous());
+		}
+
+		if (match(TokenType.NUMBER, TokenType.STRING)) {
+			return new Expr.Literal(previous().literal);
 		}
 
 		if (match(TokenType.LEFT_PAREN)) {
 			Expr expr = expression();
 			consume(TokenType.RIGHT_PAREN, "Expected ')' after expression");
 			return new Expr.Grouping(expr);
+		}
+
+		if (match(TokenType.SUPER)) {
+			Token keyword = previous();
+			consume(TokenType.DOT, "Expected '.' after 'super'.");
+			Token method = consume(TokenType.IDENTIFIER, "Expected superclass method name.");
+			return new Expr.Super(keyword, method);
 		}
 
 		throw error(peek(), "Expected an expression.");

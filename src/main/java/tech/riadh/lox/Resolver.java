@@ -13,6 +13,7 @@ import tech.riadh.lox.Expr.Grouping;
 import tech.riadh.lox.Expr.Literal;
 import tech.riadh.lox.Expr.Logical;
 import tech.riadh.lox.Expr.Set;
+import tech.riadh.lox.Expr.Super;
 import tech.riadh.lox.Expr.This;
 import tech.riadh.lox.Expr.Unary;
 import tech.riadh.lox.Expr.Variable;
@@ -123,6 +124,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 				Lox.error(stmt.superclass.name, "A class can't inherit from itself.");
 			}
 			resolve(stmt.superclass);
+			beginScope();
+			scopes.peek().put("super", true);
 		}
 
 		beginScope();
@@ -137,6 +140,11 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 		}
 
 		endScope();
+
+		if (stmt.superclass != null) {
+			endScope();
+		}
+
 		currentClass = enclosingClass;
 		return null;
 	}
@@ -205,8 +213,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
 	@Override
 	public Void visitSetExpr(Set expr) {
-		resolve(expr.object);
 		resolve(expr.value);
+		resolve(expr.object);
 		return null;
 	}
 
@@ -216,6 +224,12 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 			Lox.error(expr.keyword, "Can't use 'this' outside of a class");
 			return null;
 		}
+		resolveLocal(expr, expr.keyword);
+		return null;
+	}
+
+	@Override
+	public Void visitSuperExpr(Super expr) {
 		resolveLocal(expr, expr.keyword);
 		return null;
 	}
