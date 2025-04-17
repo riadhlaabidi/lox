@@ -7,14 +7,12 @@
 #define GROW_CAPACITY(capacity) ((capacity) < 8 ? 8 : (capacity) * 2)
 
 // Grow array given the new capacity
-#define GROW_ARRAY(type, ptr, old_capacity, new_capacity)                      \
-    (type *)reallocate(ptr, sizeof(type) * (old_capacity),                     \
-                       sizeof(type) * (new_capacity))
+#define GROW_ARRAY(type, ptr, new_capacity)                                    \
+    (type *)reallocate(ptr, sizeof(type) * (new_capacity))
 
-#define FREE_ARRAY(type, ptr, old_capacity)                                    \
-    (type *)reallocate(ptr, sizeof(type) * (old_capacity), 0)
+#define FREE_ARRAY(type, ptr, old_capacity) (type *)reallocate(ptr, 0)
 
 // Reallocates a pointer, given the old size and the new size.
-void *reallocate(void *pointer, size_t old_size, size_t new_size);
+void *reallocate(void *pointer, size_t new_size);
 
 #endif //  CLOX_MEMORY_H
