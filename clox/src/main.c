@@ -1,12 +1,12 @@
 #include "chunk.h"
-#include <stdio.h>
+#include "debug.h"
 
 int main(int argc, char **argv)
 {
     Chunk chunk;
     init_chunk(&chunk);
     write_chunk(&chunk, OP_RETURN);
-    printf("Chunk %04d %d\n", chunk.count - 1, chunk.code[chunk.count - 1]);
+    disassemble_chunk(&chunk, "Test chunk");
     free_chunk(&chunk);
     return 0;
 }
