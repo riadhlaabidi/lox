@@ -20,6 +20,12 @@ int disassemble_instruction(Chunk *chunk, int offset)
 {
     printf("%04d ", offset);
 
+    if (offset > 0 && chunk->lines[offset] == chunk->lines[offset - 1]) {
+        printf("   | "); // same line number as the instruction above it
+    } else {
+        printf("%4d ", chunk->lines[offset]);
+    }
+
     uint8_t instr = chunk->code[offset];
     switch (instr) {
         case OP_CONSTANT:
