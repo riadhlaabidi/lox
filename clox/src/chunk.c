@@ -8,6 +8,8 @@ void init_chunk(Chunk *chunk)
     chunk->count = 0;
     chunk->capacity = 0;
     chunk->code = NULL;
+    chunk->lines_count = 0;
+    chunk->lines_capacity = 0;
     chunk->lines = NULL;
     init_value_array(&chunk->constants);
 }
@@ -18,12 +20,25 @@ void write_chunk(Chunk *chunk, uint8_t byte, int line)
         int old_capacity = chunk->capacity;
         chunk->capacity = GROW_CAPACITY(old_capacity);
         chunk->code = GROW_ARRAY(uint8_t, chunk->code, chunk->capacity);
-        chunk->lines = GROW_ARRAY(int, chunk->lines, chunk->capacity);
     }
 
     chunk->code[chunk->count] = byte;
-    chunk->lines[chunk->count] = line;
     chunk->count++;
+
+    if (chunk->lines_count > 0 &&
+        chunk->lines[chunk->lines_count - 1].line == line) {
+        return;
+    }
+
+    if (chunk->lines_capacity < chunk->lines_count + 1) {
+        int old_capacity = chunk->lines_capacity;
+        chunk->lines_capacity = GROW_CAPACITY(old_capacity);
+        chunk->lines = GROW_ARRAY(Line, chunk->lines, chunk->lines_capacity);
+    }
+
+    chunk->lines[chunk->lines_count].offset = chunk->count - 1;
+    chunk->lines[chunk->lines_count].line = line;
+    chunk->lines_count++;
 }
 
 void write_constant(Chunk *chunk, Value value, int line)
@@ -50,7 +65,28 @@ int add_constant(Chunk *chunk, Value value)
 void free_chunk(Chunk *chunk)
 {
     FREE_ARRAY(uint8_t, chunk->code, chunk->capacity);
-    FREE_ARRAY(int, chunk->lines, chunk->capacity);
+    FREE_ARRAY(Line, chunk->lines, chunk->lines_capacity);
     free_value_array(&chunk->constants);
     init_chunk(chunk);
+}
+
+int get_line(Chunk *chunk, int instruction_index)
+{
+    int start = 0;
+    int end = chunk->lines_count;
+
+    while (start < end - 1) {
+        int middle = (start + end) / 2;
+        Line *line = &chunk->lines[middle];
+
+        if (instruction_index > line->offset) {
+            start = middle + 1;
+        } else if (instruction_index < line->offset) {
+            end = middle;
+        } else {
+            return line->line;
+        }
+    }
+
+    return chunk->lines[start].line;
 }
