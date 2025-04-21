@@ -5,10 +5,10 @@ int main(void)
 {
     Chunk chunk;
     init_chunk(&chunk);
-    int constant = add_constant(&chunk, 10.5);
-    write_chunk(&chunk, OP_CONSTANT, 189);
-    write_chunk(&chunk, constant, 189);
-    write_chunk(&chunk, OP_RETURN, 189);
+    for (int i = 0; i <= 10; i++) {
+        write_constant(&chunk, 20.0, i + 1);
+    }
+    write_chunk(&chunk, OP_RETURN, 8);
 
     disassemble_chunk(&chunk, "Test chunk");
     free_chunk(&chunk);
