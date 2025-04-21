@@ -1,7 +1,6 @@
 #include "chunk.h"
 #include "memory.h"
 #include "value.h"
-#include <stdint.h>
 
 void init_chunk(Chunk *chunk)
 {
@@ -19,7 +18,8 @@ void write_chunk(Chunk *chunk, uint8_t byte, int line)
     if (chunk->capacity < chunk->count + 1) {
         int old_capacity = chunk->capacity;
         chunk->capacity = GROW_CAPACITY(old_capacity);
-        chunk->code = GROW_ARRAY(uint8_t, chunk->code, chunk->capacity);
+        chunk->code = GROW_ARRAY(uint8_t, chunk->code, old_capacity,
+                                 chunk->capacity);
     }
 
     chunk->code[chunk->count] = byte;
@@ -33,7 +33,8 @@ void write_chunk(Chunk *chunk, uint8_t byte, int line)
     if (chunk->lines_capacity < chunk->lines_count + 1) {
         int old_capacity = chunk->lines_capacity;
         chunk->lines_capacity = GROW_CAPACITY(old_capacity);
-        chunk->lines = GROW_ARRAY(Line, chunk->lines, chunk->lines_capacity);
+        chunk->lines = GROW_ARRAY(Line, chunk->lines, old_capacity,
+                                  chunk->lines_capacity);
     }
 
     chunk->lines[chunk->lines_count].offset = chunk->count - 1;
@@ -72,15 +73,17 @@ void free_chunk(Chunk *chunk)
 
 int get_line(Chunk *chunk, int instruction_index)
 {
-    int start = 0;
-    int end = chunk->lines_count;
+    int start = 0;                // start is always inclusive
+    int end = chunk->lines_count; // end is always exclusive
 
+    // Since end is exclusive, if start reaches end-1, the line with index start
+    // must be the answer, no further processing is needed.
     while (start < end - 1) {
         int middle = (start + end) / 2;
         Line *line = &chunk->lines[middle];
 
         if (instruction_index > line->offset) {
-            start = middle + 1;
+            start = middle;
         } else if (instruction_index < line->offset) {
             end = middle;
         } else {

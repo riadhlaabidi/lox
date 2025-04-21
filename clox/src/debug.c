@@ -70,11 +70,10 @@ static int constant_instruction(const char *name, Chunk *chunk, int offset)
 
 static int constant_long_instruction(const char *name, Chunk *chunk, int offset)
 {
-    uint32_t constant = 0;
-    for (int i = 0; i < 3; i++) {
-        constant = (constant << (8 * i)) & chunk->code[offset + i + 1];
-    }
-    printf("%s %4d '", name, constant);
+    uint32_t constant = chunk->code[offset + 1] |
+                        (chunk->code[offset + 2] << 8) |
+                        (chunk->code[offset + 3] << 16);
+    printf("%s %d '", name, constant);
     print_value(chunk->constants.values[constant]);
     printf("'\n");
     return offset + 4;
