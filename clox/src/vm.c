@@ -39,8 +39,7 @@ static InterpretResult run(VM *vm)
 #define BINARY_OP(operator)                                                    \
     do {                                                                       \
         double b = pop(vm);                                                    \
-        double a = pop(vm);                                                    \
-        push(vm, a operator b);                                                \
+        *(vm->stack_top - 1) = *(vm->stack_top - 1) operator b;                \
     } while (0)
 
     while (1) {
@@ -82,7 +81,7 @@ static InterpretResult run(VM *vm)
                 break;
             }
             case OP_NEGATE: {
-                push(vm, -pop(vm));
+                *(vm->stack_top - 1) = -(*(vm->stack_top - 1));
                 break;
             }
             case OP_RETURN: {
