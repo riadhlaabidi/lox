@@ -6,10 +6,23 @@
 #include "vm.h"
 
 static InterpretResult run(VM *vm);
+static void reset_stack(VM *vm);
 
-void init_VM(VM *vm) {}
+void init_VM(VM *vm) { reset_stack(vm); }
 
 void free_VM(VM *vm) {}
+
+void push(VM *vm, Value value)
+{
+    *vm->stack_top = value;
+    vm->stack_top++;
+}
+
+Value pop(VM *vm)
+{
+    vm->stack_top--;
+    return *vm->stack_top;
+}
 
 InterpretResult interpret(VM *vm, Chunk *chunk)
 {
@@ -44,3 +57,5 @@ static InterpretResult run(VM *vm)
 #undef READ_BYTE
 #undef READ_CONSTANT
 }
+
+static void reset_stack(VM *vm) { vm->stack_top = vm->stack; }

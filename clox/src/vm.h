@@ -3,9 +3,13 @@
 
 #include "chunk.h"
 
+#define STACK_MAX 256
+
 typedef struct {
     Chunk *chunk;
     uint8_t *ip;
+    Value stack[STACK_MAX];
+    Value *stack_top;
 } VM;
 
 typedef enum {
@@ -16,7 +20,8 @@ typedef enum {
 
 void init_VM(VM *vm);
 void free_VM(VM *vm);
-
+void push(VM *vm, Value value);
+Value pop(VM *vm);
 InterpretResult interpret(VM *vm, Chunk *chunk);
 
 #endif /* end of include guard: CLOX_VM_H */
