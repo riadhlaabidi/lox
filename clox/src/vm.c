@@ -3,6 +3,7 @@
 #include "chunk.h"
 #include "common.h"
 #include "debug.h"
+#include "value.h"
 #include "vm.h"
 
 static InterpretResult run(VM *vm);
@@ -38,6 +39,16 @@ static InterpretResult run(VM *vm)
 
     while (1) {
 #ifdef DEBUG_TRACE_EXECUTION
+        printf("    stack--");
+        printf("[");
+        // print stack
+        for (Value *slot = vm->stack; slot < vm->stack_top; slot++) {
+            printf(" ");
+            print_value(*slot);
+            printf(",");
+        }
+        printf(" ]");
+        printf("\n");
         disassemble_instruction(vm->chunk, (int)(vm->ip - vm->chunk->code));
 #endif /* ifdef DEBUG_TRACE_EXECUTION */
 
@@ -45,11 +56,12 @@ static InterpretResult run(VM *vm)
         switch (instruction = READ_BYTE()) {
             case OP_CONSTANT: {
                 Value constant = READ_CONSTANT();
-                print_value(constant);
-                printf("\n");
+                push(vm, constant);
                 break;
             }
             case OP_RETURN: {
+                print_value(pop(vm));
+                printf("\n");
                 return INTERPRET_OK;
             }
         }
