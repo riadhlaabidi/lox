@@ -2,6 +2,7 @@
 #define CLOX_VM_H
 
 #include "chunk.h"
+#include "scanner.h"
 
 #define STACK_MAX 256
 
@@ -22,6 +23,6 @@ void init_VM(VM *vm);
 void free_VM(VM *vm);
 void push(VM *vm, Value value);
 Value pop(VM *vm);
-InterpretResult interpret(VM *vm, Chunk *chunk);
+InterpretResult interpret(Scanner *scanner, const char *source);
 
 #endif /* end of include guard: CLOX_VM_H */

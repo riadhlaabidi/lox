@@ -2,6 +2,7 @@
 
 #include "chunk.h"
 #include "common.h"
+#include "compiler.h"
 #include "debug.h"
 #include "value.h"
 #include "vm.h"
@@ -25,11 +26,10 @@ Value pop(VM *vm)
     return *vm->stack_top;
 }
 
-InterpretResult interpret(VM *vm, Chunk *chunk)
+InterpretResult interpret(Scanner *scanner, const char *source)
 {
-    vm->chunk = chunk;
-    vm->ip = vm->chunk->code;
-    return run(vm);
+    compile(scanner, source);
+    return INTERPRET_OK;
 }
 
 static InterpretResult run(VM *vm)
