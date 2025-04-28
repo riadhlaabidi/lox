@@ -1,8 +1,8 @@
 #ifndef CLOX_COMPILER_H
 #define CLOX_COMPILER_H
 
-#include "scanner.h"
+#include "vm.h"
 
-void compile(Scanner *scanner, const char *source);
+int compile(const char *source, Chunk *chunk);
 
 #endif /* end of include guard: CLOX_COMPILER_H */

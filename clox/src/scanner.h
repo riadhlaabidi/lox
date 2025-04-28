@@ -1,12 +1,6 @@
 #ifndef CLOX_SCANNER_H
 #define CLOX_SCANNER_H
 
-typedef struct {
-    const char *start;
-    const char *current;
-    int line;
-} Scanner;
-
 typedef enum {
     TOKEN_LEFT_PAREN,
     TOKEN_RIGHT_PAREN,
@@ -57,7 +51,7 @@ typedef struct {
     int line;
 } Token;
 
-void init_scanner(Scanner *scanner, const char *source);
-Token scan_token(Scanner *scanner);
+void init_scanner(const char *source);
+Token scan_token();
 
 #endif /* end of include guard: CLOX_SCANNER_H */
