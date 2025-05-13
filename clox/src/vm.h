@@ -23,6 +23,7 @@ void init_VM(VM *vm);
 void free_VM(VM *vm);
 void push(VM *vm, Value value);
 Value pop(VM *vm);
+Value peek(VM *vm, int distance);
 InterpretResult interpret(VM *vm, const char *source);
 
 #endif /* end of include guard: CLOX_VM_H */
