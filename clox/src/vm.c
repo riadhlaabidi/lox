@@ -61,7 +61,7 @@ static InterpretResult run(VM *vm)
 
 #define BINARY_OP(value_type, operator)                                        \
     do {                                                                       \
-        if (!IS_NUMBER(peek(vm, 0)) && !IS_NUMBER(peek(vm, 1))) {              \
+        if (!IS_NUMBER(peek(vm, 0)) || !IS_NUMBER(peek(vm, 1))) {              \
             runtime_error(vm, "Operands must be numbers.");                    \
             return INTERPRET_RUNTIME_ERROR;                                    \
         }                                                                      \
@@ -93,7 +93,7 @@ static InterpretResult run(VM *vm)
                 break;
             }
             case OP_NIL:
-                push(vm, NIL_VAL);
+                push(vm, NIL_VALUE);
                 break;
             case OP_TRUE:
                 push(vm, BOOL_VALUE(true));
