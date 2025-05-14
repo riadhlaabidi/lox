@@ -1,9 +1,8 @@
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "chunk.h"
 #include "compiler.h"
+#include "object.h"
 #include "scanner.h"
 
 #ifdef DEBUG_PRINT_CODE
@@ -43,7 +42,9 @@ Parser parser;
 Chunk *compiling_chunk;
 
 static void expression();
+static void literal();
 static void number();
+static void string();
 static void grouping();
 static void unary();
 static void binary();
@@ -60,7 +61,6 @@ static void emit_constant(Value value);
 static void end_compiler();
 static Chunk *current_chunk();
 static uint8_t make_constant(Value value);
-static void literal();
 
 int compile(const char *source, Chunk *chunk)
 {
@@ -96,7 +96,7 @@ ParseRule rules[] = {
     [TOKEN_LESS] = {NULL, binary, PREC_COMPARISON},
     [TOKEN_LESS_EQUAL] = {NULL, binary, PREC_COMPARISON},
     [TOKEN_IDENTIFIER] = {NULL, NULL, PREC_NONE},
-    [TOKEN_STRING] = {NULL, NULL, PREC_NONE},
+    [TOKEN_STRING] = {string, NULL, PREC_NONE},
     [TOKEN_NUMBER] = {number, NULL, PREC_NONE},
     [TOKEN_AND] = {NULL, NULL, PREC_NONE},
     [TOKEN_CLASS] = {NULL, NULL, PREC_NONE},
@@ -120,10 +120,34 @@ ParseRule rules[] = {
 
 static void expression() { parse_precedence(PREC_ASSIGNMENT); }
 
+static void literal()
+{
+    switch (parser.previous.type) {
+        case TOKEN_FALSE:
+            emit_byte(OP_FALSE);
+            break;
+        case TOKEN_TRUE:
+            emit_byte(OP_TRUE);
+            break;
+        case TOKEN_NIL:
+            emit_byte(OP_NIL);
+            break;
+        default:
+            assert(0 && "Unreachable code");
+    }
+}
+
 static void number()
 {
     double value = strtod(parser.previous.start, NULL);
     emit_constant(NUMBER_VALUE(value));
+}
+
+static void string()
+{
+    const char *start = parser.previous.start + 1;
+    int length = parser.previous.length - 2;
+    emit_constant(OBJECT_VALUE(copy_string(start, length)));
 }
 
 static void grouping()
@@ -134,7 +158,7 @@ static void grouping()
 
 static void unary()
 {
-    TokenType operator = parser.previous.type;
+    TokenType operator= parser.previous.type;
 
     parse_precedence(PREC_UNARY);
 
@@ -185,23 +209,6 @@ static void binary()
             break;
         case TOKEN_SLASH:
             emit_byte(OP_DIVIDE);
-            break;
-        default:
-            assert(0 && "Unreachable code");
-    }
-}
-
-static void literal()
-{
-    switch (parser.previous.type) {
-        case TOKEN_FALSE:
-            emit_byte(OP_FALSE);
-            break;
-        case TOKEN_TRUE:
-            emit_byte(OP_TRUE);
-            break;
-        case TOKEN_NIL:
-            emit_byte(OP_NIL);
             break;
         default:
             assert(0 && "Unreachable code");

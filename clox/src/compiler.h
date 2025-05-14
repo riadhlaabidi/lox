@@ -1,7 +1,7 @@
 #ifndef CLOX_COMPILER_H
 #define CLOX_COMPILER_H
 
-#include "vm.h"
+#include "chunk.h"
 
 int compile(const char *source, Chunk *chunk);
 

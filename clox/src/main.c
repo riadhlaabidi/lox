@@ -3,30 +3,7 @@
 
 #include "vm.h"
 
-static void repl(VM *vm);
-static void run_file(VM *vm, const char *path);
-static char *read_file(const char *path);
-
-int main(int argc, char **argv)
-{
-    VM vm;
-
-    init_VM(&vm);
-
-    if (argc == 1) {
-        repl(&vm);
-    } else if (argc == 2) {
-        run_file(&vm, argv[1]);
-    } else {
-        fprintf(stderr, "Usage: lox <file.lox>\n");
-        exit(64);
-    }
-
-    free_VM(&vm);
-    return EXIT_SUCCESS;
-}
-
-static void repl(VM *vm)
+static void repl()
 {
     char line[1024];
     while (1) {
@@ -37,19 +14,8 @@ static void repl(VM *vm)
             break;
         }
 
-        interpret(vm, line);
+        interpret(line);
     }
-}
-static void run_file(VM *vm, const char *path)
-{
-    char *source = read_file(path);
-    InterpretResult result = interpret(vm, source);
-    free(source);
-
-    if (result == INTERPRET_COMPILE_ERROR)
-        exit(65);
-    if (result == INTERPRET_RUNTIME_ERROR)
-        exit(70);
 }
 
 static char *read_file(const char *path)
@@ -80,4 +46,33 @@ static char *read_file(const char *path)
 
     fclose(file);
     return buffer;
+}
+
+static void run_file(const char *path)
+{
+    char *source = read_file(path);
+    InterpretResult result = interpret(source);
+    free(source);
+
+    if (result == INTERPRET_COMPILE_ERROR)
+        exit(65);
+    if (result == INTERPRET_RUNTIME_ERROR)
+        exit(70);
+}
+
+int main(int argc, char **argv)
+{
+    init_VM();
+
+    if (argc == 1) {
+        repl();
+    } else if (argc == 2) {
+        run_file(argv[1]);
+    } else {
+        fprintf(stderr, "Usage: lox <file.lox>\n");
+        exit(64);
+    }
+
+    free_VM();
+    return EXIT_SUCCESS;
 }

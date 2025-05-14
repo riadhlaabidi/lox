@@ -2,7 +2,7 @@
 #define CLOX_VM_H
 
 #include "chunk.h"
-#include "scanner.h"
+#include "value.h"
 
 #define STACK_MAX 256
 
@@ -11,6 +11,7 @@ typedef struct {
     uint8_t *ip;
     Value stack[STACK_MAX];
     Value *stack_top;
+    Object *objects;
 } VM;
 
 typedef enum {
@@ -19,11 +20,13 @@ typedef enum {
     INTERPRET_RUNTIME_ERROR
 } InterpretResult;
 
-void init_VM(VM *vm);
-void free_VM(VM *vm);
-void push(VM *vm, Value value);
-Value pop(VM *vm);
-Value peek(VM *vm, int distance);
-InterpretResult interpret(VM *vm, const char *source);
+void init_VM();
+void free_VM();
+void push(Value value);
+Value pop();
+Value peek(int distance);
+InterpretResult interpret(const char *source);
+
+extern VM vm;
 
 #endif /* end of include guard: CLOX_VM_H */
