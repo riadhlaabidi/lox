@@ -10,11 +10,6 @@ SOURCES := $(wildcard $(SRC_DIR)/*.c)
 OBJECTS := $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SOURCES))
 
 all: $(TARGET)
-	@echo "*******************"
-	@echo "* Lox interpreter *"
-	@echo "*******************"
-	@echo
-	@./$(TARGET)
 
 $(TARGET): $(OBJECTS)
 	$(CC) $(OBJECTS) -o $@
@@ -28,7 +23,14 @@ $(BUILD_DIR):
 clean:
 	rm -rf $(BUILD_DIR)
 
-.PHONY: all clean
+run:
+	@echo "*******************"
+	@echo "* Lox Interpreter *"
+	@echo "*******************"
+	@echo
+	@./$(TARGET)
+
+.PHONY: all clean run
 
 
 
