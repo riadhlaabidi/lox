@@ -5,9 +5,6 @@
 #include "object.h"
 #include "vm.h"
 
-#define ALLOCATE(type, count)                                                  \
-    (type *)reallocate(NULL, 0, sizeof(type) * (count))
-
 // Grows capacity by a factor of 2.
 #define GROW_CAPACITY(capacity) ((capacity) < 8 ? 8 : (capacity) * 2)
 

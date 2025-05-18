@@ -22,7 +22,7 @@ struct Object {
 struct StringObject {
     Object object;
     int length;
-    char *chars;
+    char chars[];
 };
 
 StringObject *copy_string(const char *chars, int length);

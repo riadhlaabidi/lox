@@ -26,9 +26,9 @@ static void free_object(Object *object)
 {
     switch (object->type) {
         case STRING_OBJECT: {
-            StringObject *s = (StringObject *)object;
-            FREE_ARRAY(char, s->chars, s->length + 1);
-            FREE(StringObject, object);
+            StringObject *string = (StringObject *)object;
+            // free string object along with its contiguous characters array
+            reallocate(object, sizeof(StringObject) + string->length + 1, 0);
             break;
         }
     }

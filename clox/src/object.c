@@ -5,9 +5,6 @@
 #include "object.h"
 #include "vm.h"
 
-#define ALLOCATE_OBJECT(type, object_type)                                     \
-    (type *)allocate_object(sizeof(type), object_type)
-
 static Object *allocate_object(size_t size, ObjectType type)
 {
     Object *object = (Object *)reallocate(NULL, 0, size);
@@ -17,31 +14,33 @@ static Object *allocate_object(size_t size, ObjectType type)
     return object;
 }
 
-StringObject *allocate_string_object(char *chars, int length)
+StringObject *allocate_string_object(int length)
 {
-    StringObject *string = ALLOCATE_OBJECT(StringObject, STRING_OBJECT);
-    string->chars = chars;
+    StringObject *string = (StringObject *)allocate_object(
+        sizeof(StringObject) + length + 1, STRING_OBJECT);
     string->length = length;
     return string;
 }
 
 StringObject *copy_string(const char *chars, int length)
 {
-    char *heap_chars = ALLOCATE(char, length + 1);
-    memcpy(heap_chars, chars, length);
-    heap_chars[length] = '\0';
-    return allocate_string_object(heap_chars, length);
+
+    StringObject *string = allocate_string_object(length);
+    memcpy(string->chars, chars, length);
+    string->chars[length] = '\0';
+    return string;
 }
 
 StringObject *concat_strings(StringObject *a, StringObject *b)
 {
     int length = a->length + b->length;
-    char *concatenated = ALLOCATE(char, length + 1);
-    memcpy(concatenated, a->chars, a->length);
-    memcpy(concatenated + a->length, b->chars, b->length);
-    concatenated[length] = '\0';
+    StringObject *result = allocate_string_object(length);
 
-    return allocate_string_object(concatenated, length);
+    memcpy(result->chars, a->chars, a->length);
+    memcpy(result->chars + a->length, b->chars, b->length);
+    result->chars[length] = '\0';
+
+    return result;
 }
 
 void print_object(Value value)
