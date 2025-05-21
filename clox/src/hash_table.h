@@ -16,6 +16,8 @@ typedef struct {
 
 void HT_init(HashTable *ht);
 int HT_set(HashTable *ht, StringObject *key, Value value);
+int HT_get(HashTable *ht, StringObject *key, Value *value);
+int HT_delete(HashTable *ht, StringObject *key);
 void HT_add_all(HashTable *src, HashTable *dest);
 void HT_free(HashTable *ht);
 
