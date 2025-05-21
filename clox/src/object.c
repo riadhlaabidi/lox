@@ -17,20 +17,33 @@ static Object *allocate_object(size_t size, ObjectType type)
     return object;
 }
 
-StringObject *allocate_string_object(char *chars, int length)
+static uint32_t hash_string(const char *key, int length)
+{
+    uint32_t hash = 2166136261u;
+    for (int i = 0; i < length; i++) {
+        hash ^= (uint8_t)key[i];
+        hash *= 16777619;
+    }
+    return hash;
+}
+
+StringObject *allocate_string_object(char *chars, int length, uint32_t hash)
 {
     StringObject *string = ALLOCATE_OBJECT(StringObject, STRING_OBJECT);
     string->chars = chars;
     string->length = length;
+    string->hash = hash;
     return string;
 }
 
 StringObject *copy_string(const char *chars, int length)
 {
+    uint32_t hash = hash_string(chars, length);
     char *heap_chars = ALLOCATE(char, length + 1);
     memcpy(heap_chars, chars, length);
     heap_chars[length] = '\0';
-    return allocate_string_object(heap_chars, length);
+
+    return allocate_string_object(heap_chars, length, hash);
 }
 
 StringObject *concat_strings(StringObject *a, StringObject *b)
@@ -41,7 +54,8 @@ StringObject *concat_strings(StringObject *a, StringObject *b)
     memcpy(concatenated + a->length, b->chars, b->length);
     concatenated[length] = '\0';
 
-    return allocate_string_object(concatenated, length);
+    uint32_t hash = hash_string(concatenated, length);
+    return allocate_string_object(concatenated, length, hash);
 }
 
 void print_object(Value value)

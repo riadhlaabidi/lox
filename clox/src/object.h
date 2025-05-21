@@ -23,6 +23,7 @@ struct StringObject {
     Object object;
     int length;
     char *chars;
+    uint32_t hash;
 };
 
 StringObject *copy_string(const char *chars, int length);
