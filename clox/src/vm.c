@@ -6,6 +6,7 @@
 #include "chunk.h"
 #include "compiler.h"
 #include "debug.h"
+#include "hash_table.h"
 #include "memory.h"
 #include "object.h"
 #include "value.h"
@@ -19,9 +20,14 @@ void init_VM()
 {
     reset_stack();
     vm.objects = NULL;
+    HT_init(&vm.strings);
 }
 
-void free_VM() { free_objects(); }
+void free_VM()
+{
+    HT_free(&vm.strings);
+    free_objects();
+}
 
 void push(Value value)
 {

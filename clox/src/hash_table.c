@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "hash_table.h"
 #include "memory.h"
 #include "value.h"
@@ -134,4 +136,32 @@ void HT_free(HashTable *ht)
 {
     FREE_ARRAY(HT_entry, ht->entries, ht->capacity);
     HT_init(ht);
+}
+
+StringObject *HT_find_interned_string(HashTable *ht, const char *chars,
+                                      int length, uint32_t hash)
+{
+    if (ht->count == 0) {
+        return NULL;
+    }
+
+    uint32_t index = hash % ht->capacity;
+
+    while (1) {
+        HT_entry *entry = &ht->entries[index];
+
+        if (entry->key == NULL) {
+            // emtpy
+            if (IS_NIL(entry->value)) {
+                // not a tombstone -> not found
+                return NULL;
+            }
+        } else if (entry->key->length == length && entry->key->hash == hash &&
+                   memcmp(entry->key->chars, chars, length) == 0) {
+            // found
+            return entry->key;
+        }
+
+        index = (index + 1) % ht->capacity;
+    }
 }

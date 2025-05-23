@@ -33,12 +33,19 @@ StringObject *allocate_string_object(char *chars, int length, uint32_t hash)
     string->chars = chars;
     string->length = length;
     string->hash = hash;
+    HT_set(&vm.strings, string, NIL_VALUE);
     return string;
 }
 
 StringObject *copy_string(const char *chars, int length)
 {
     uint32_t hash = hash_string(chars, length);
+    StringObject *interned = HT_find_interned_string(&vm.strings, chars, length,
+                                                     hash);
+    if (interned != NULL) {
+        return interned;
+    }
+
     char *heap_chars = ALLOCATE(char, length + 1);
     memcpy(heap_chars, chars, length);
     heap_chars[length] = '\0';
@@ -55,6 +62,14 @@ StringObject *concat_strings(StringObject *a, StringObject *b)
     concatenated[length] = '\0';
 
     uint32_t hash = hash_string(concatenated, length);
+
+    StringObject *interned = HT_find_interned_string(&vm.strings, concatenated,
+                                                     length, hash);
+    if (interned != NULL) {
+        FREE_ARRAY(char, concatenated, length + 1);
+        return interned;
+    }
+
     return allocate_string_object(concatenated, length, hash);
 }
 

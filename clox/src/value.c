@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <string.h>
 
 #include "memory.h"
 #include "object.h"
@@ -63,13 +62,8 @@ int values_equal(Value a, Value b)
             return AS_BOOL(a) == AS_BOOL(b);
         case VAL_NIL:
             return 1;
-        case VAL_OBJECT: {
-            StringObject *string_a = AS_STRING(a);
-            StringObject *string_b = AS_STRING(b);
-            return string_a->length == string_b->length &&
-                   memcmp(string_a->chars, string_b->chars, string_a->length) ==
-                       0;
-        }
+        case VAL_OBJECT:
+            return AS_OBJECT(a) == AS_OBJECT(b);
         default:
             assert(0 && "Unreachable code");
     }
