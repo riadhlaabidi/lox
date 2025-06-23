@@ -41,6 +41,7 @@ typedef struct {
 Parser parser;
 Chunk *compiling_chunk;
 
+static void declaration();
 static void expression();
 static void literal();
 static void number();
@@ -50,6 +51,7 @@ static void unary();
 static void binary();
 static void parse_precedence(Precedence precedence);
 static void advance();
+static int match(TokenType type);
 static void error_at_current(const char *msg);
 static void error_at(Token *token, const char *msg);
 static void error(const char *msg);
@@ -69,8 +71,11 @@ int compile(const char *source, Chunk *chunk)
     parser.had_error = 0;
     parser.panic_mode = 0;
     advance();
-    expression();
-    consume(TOKEN_EOF, "Expected end of expression");
+
+    while (!match(TOKEN_EOF)) {
+        declaration();
+    }
+
     end_compiler();
     return !parser.had_error;
 }
@@ -118,6 +123,20 @@ ParseRule rules[] = {
     [TOKEN_EOF] = {NULL, NULL, PREC_NONE},
 };
 
+static void print_statement()
+{
+    expression();
+    consume(TOKEN_SEMICOLON, "Expected ';' after expression.");
+    emit_byte(OP_PRINT);
+}
+
+static void statement()
+{
+    if (match(TOKEN_PRINT)) {
+        print_statement();
+    }
+}
+static void declaration() { statement(); }
 static void expression() { parse_precedence(PREC_ASSIGNMENT); }
 
 static void literal()
@@ -292,6 +311,17 @@ static void consume(TokenType type, const char *msg)
         return;
     }
     error_at_current(msg);
+}
+
+static int check(TokenType type) { return parser.current.type == type; }
+
+static int match(TokenType type)
+{
+    if (!check(type)) {
+        return 0;
+    }
+    advance();
+    return 1;
 }
 
 static void emit_byte(uint8_t byte)

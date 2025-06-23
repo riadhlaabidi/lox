@@ -95,32 +95,6 @@ static InterpretResult run()
 
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {
-            case OP_CONSTANT: {
-                Value constant = READ_CONSTANT();
-                push(constant);
-                break;
-            }
-            case OP_NIL:
-                push(NIL_VALUE);
-                break;
-            case OP_TRUE:
-                push(BOOL_VALUE(true));
-                break;
-            case OP_FALSE:
-                push(BOOL_VALUE(false));
-                break;
-            case OP_EQUAL: {
-                Value b = pop();
-                Value a = pop();
-                push(BOOL_VALUE(values_equal(a, b)));
-                break;
-            }
-            case OP_GREATER:
-                BINARY_OP(BOOL_VALUE, >);
-                break;
-            case OP_LESS:
-                BINARY_OP(BOOL_VALUE, <);
-                break;
             case OP_ADD: {
                 if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
                     StringObject *s = concat_strings(AS_STRING(pop()),
@@ -136,17 +110,31 @@ static InterpretResult run()
                 }
                 break;
             }
-            case OP_SUBTRACT:
-                BINARY_OP(NUMBER_VALUE, -);
+            case OP_CONSTANT: {
+                Value constant = READ_CONSTANT();
+                push(constant);
                 break;
-            case OP_MULTIPLY:
-                BINARY_OP(NUMBER_VALUE, *);
-                break;
+            }
             case OP_DIVIDE:
                 BINARY_OP(NUMBER_VALUE, /);
                 break;
-            case OP_NOT:
-                push(BOOL_VALUE(is_falsey(pop())));
+            case OP_EQUAL: {
+                Value b = pop();
+                Value a = pop();
+                push(BOOL_VALUE(values_equal(a, b)));
+                break;
+            }
+            case OP_FALSE:
+                push(BOOL_VALUE(false));
+                break;
+            case OP_GREATER:
+                BINARY_OP(BOOL_VALUE, >);
+                break;
+            case OP_LESS:
+                BINARY_OP(BOOL_VALUE, <);
+                break;
+            case OP_MULTIPLY:
+                BINARY_OP(NUMBER_VALUE, *);
                 break;
             case OP_NEGATE: {
                 if (!IS_NUMBER(peek(0))) {
@@ -156,11 +144,26 @@ static InterpretResult run()
                 push(NUMBER_VALUE(-AS_NUMBER(pop())));
                 break;
             }
-            case OP_RETURN: {
+            case OP_NIL:
+                push(NIL_VALUE);
+                break;
+            case OP_NOT:
+                push(BOOL_VALUE(is_falsey(pop())));
+                break;
+            case OP_PRINT:
                 print_value(pop());
                 printf("\n");
+                break;
+            case OP_RETURN: {
+                // Exit interpreter
                 return INTERPRET_OK;
             }
+            case OP_SUBTRACT:
+                BINARY_OP(NUMBER_VALUE, -);
+                break;
+            case OP_TRUE:
+                push(BOOL_VALUE(true));
+                break;
         }
     }
 #undef READ_BYTE
