@@ -130,13 +130,54 @@ static void print_statement()
     emit_byte(OP_PRINT);
 }
 
+static void expression_statement()
+{
+    expression();
+    consume(TOKEN_SEMICOLON, "Expected ';' after expression.");
+    emit_byte(OP_POP);
+}
+
 static void statement()
 {
     if (match(TOKEN_PRINT)) {
         print_statement();
+    } else {
+        expression_statement();
     }
 }
-static void declaration() { statement(); }
+
+static void synchronize()
+{
+    parser.panic_mode = 0;
+    while (parser.current.type != TOKEN_EOF) {
+        if (parser.previous.type == TOKEN_SEMICOLON) {
+            return;
+        }
+
+        switch (parser.current.type) {
+            case TOKEN_CLASS:
+            case TOKEN_FUN:
+            case TOKEN_VAR:
+            case TOKEN_FOR:
+            case TOKEN_IF:
+            case TOKEN_WHILE:
+            case TOKEN_PRINT:
+            case TOKEN_RETURN:
+                return;
+            default:; // just skip
+        }
+        advance();
+    }
+}
+
+static void declaration()
+{
+    statement();
+
+    if (parser.panic_mode) {
+        synchronize();
+    }
+}
 static void expression() { parse_precedence(PREC_ASSIGNMENT); }
 
 static void literal()
@@ -343,7 +384,7 @@ static void end_compiler()
 
 #ifdef DEBUG_PRINT_CODE
     if (!parser.had_error) {
-        disassemble_chunk(current_chunk(), "code");
+        disassemble_chunk(current_chunk(), "Code");
     }
 #endif
 }

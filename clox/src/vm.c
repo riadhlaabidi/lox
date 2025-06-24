@@ -78,9 +78,12 @@ static InterpretResult run()
         push(value_type(a operator b));                                        \
     } while (0)
 
+#ifdef DEBUG_TRACE_EXECUTION
+    printf("\n======== Execution ========\n");
+#endif /* ifdef DEBUG_TRACE_EXECUTION */
     while (1) {
 #ifdef DEBUG_TRACE_EXECUTION
-        printf("    stack--");
+        printf("stack--");
         printf("[");
         // print stack
         for (Value *slot = vm.stack; slot < vm.stack_top; slot++) {
@@ -153,6 +156,9 @@ static InterpretResult run()
             case OP_PRINT:
                 print_value(pop());
                 printf("\n");
+                break;
+            case OP_POP:
+                pop();
                 break;
             case OP_RETURN: {
                 // Exit interpreter
